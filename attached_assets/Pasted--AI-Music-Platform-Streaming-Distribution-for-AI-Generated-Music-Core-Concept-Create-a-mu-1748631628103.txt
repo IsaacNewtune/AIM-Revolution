@@ -1,0 +1,127 @@
+# AI Music Platform: Streaming & Distribution for AI-Generated Music
+
+## Core Concept
+Create a music streaming and distribution platform exclusively for AI-generated music (either fully or partially created with AI). The platform combines the streaming functionality of Spotify with the distribution capabilities of DistroKid, specifically targeting AI music creators and listeners.
+
+## User Types & Account Structure
+
+### Listener Accounts
+- **Dashboard Elements**:
+  - Profile picture and bio
+  - Tipping credit balance
+  - Stream history
+  - Tipped artists/songs tracking
+- **Required Features**:
+  - Tiered subscription options
+  - Credit purchase system for tipping
+  - Unique ID assignment for data analytics
+
+### Artist Accounts
+- **Dashboard Elements**:
+  - Profile picture
+  - Banner image at top of page
+  - Bio and location
+  - Music upload functionality with album artwork
+  - Revenue tracking (streams, tips, ad revenue)
+  - Analytics dashboard
+- **Required Features**:
+  - Single artist management
+  - Unique ID for artist and all uploaded content
+  - Integration with payout system
+
+### Manager Accounts
+- **Dashboard Elements**:
+  - Multiple artist management panel
+  - Consolidated revenue tracking
+  - Individual artist performance metrics
+  - Combined analytics dashboard
+- **Required Features**:
+  - Artist creation functionality
+  - Revenue distribution management
+  - Multi-artist data visualization
+
+## Monetization Structure
+
+### Listener Revenue
+- Tiered subscription packages
+- Ad-supported free tier (no artist payouts from free streams, but tracked)
+- Tipping system:
+  - Minimum $1 direct artist tip
+  - Minimum $0.10 song tip
+  - Purchasable credit balance
+
+### Artist Revenue
+- Stream counts from paid accounts only
+- Percentage of ad revenue
+- Direct tips (artist and song levels)
+- Stripe integration for payments and payouts
+
+## Technical Requirements
+
+### Unique Tracking
+- Generate unique IDs for:
+  - All user accounts (listeners, artists, managers)
+  - Each song
+  - Each album
+  - Each monetary transaction
+
+### Analytics
+- Track number of streams per song ( no streaming pay,ent for songs from free listener account)
+- Track tips (source, amount, recipient)
+- Track geographic data of listeners
+- Track conversion from free to paid tiers
+
+### Payment Processing
+- Stripe integration for:
+  - Subscription payments
+  - Credit purchases
+  - Artist/manager payouts
+  - Transaction tracking
+
+## User Experience Flow
+
+### Registration
+1. Landing page clearly markets platform as "AI-GENERATED MUSIC PLATFORM" (use marketing/hype language)
+2. Account type selection (Listener, Artist, or Manager)
+3. Basic information collection
+4. Tier selection based on account type
+5. Payment information (if applicable)
+6. Dashboard access
+
+### Artist Experience
+1. Profile setup
+2. Music upload with metadata and artwork
+3. Album creation
+4. Revenue tracking and analytics access
+5. Payout setup
+
+### Manager Experience
+1. Profile setup
+2. Artist creation/management
+3. Consolidated revenue tracking
+4. Multi-artist analytics
+5. Payout management
+
+### Listener Experience
+1. Profile setup
+2. Music discovery interface
+3. Streaming functionality
+4. Credit purchase for tipping
+5. Tipping interface
+
+## Additional Specifications
+- Clear attribution of AI involvement in music creation
+- Seamless mobile and desktop experience
+- Social sharing capabilities
+- Playlist creation and curation tools
+- Search and discovery functionality focused on AI music genres/styles
+- Regular payout schedule for artists/managers
+
+## Technical Integration
+- Secure authentication system
+- AWS S3 Cloud storage for music files
+- Analytics database for tracking all user interactions
+- Stripe API implementation for all financial transactions
+- Scalable architecture to handle growth
+
+This platform should revolutionize how AI-generated music is distributed, monetized, and discovered while providing fair compensation to creators through multiple revenue streams.
