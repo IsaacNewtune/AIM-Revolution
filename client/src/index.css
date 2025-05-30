@@ -1,3 +1,6 @@
+/* FontAwesome icons via CDN */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -119,9 +122,6 @@
     border-color: hsl(var(--spotify-green));
   }
 }
-
-/* FontAwesome icons via CDN */
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
 /* Custom scrollbar styling */
 ::-webkit-scrollbar {
