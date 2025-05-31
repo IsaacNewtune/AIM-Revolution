@@ -180,11 +180,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/songs', async (req, res) => {
     try {
-      const songs = await storage.getAllSongs();
+      const { search, genre, sortBy, limit } = req.query;
+      const songs = await storage.getAllSongs({
+        search: search as string,
+        genre: genre as string,
+        sortBy: sortBy as string,
+        limit: limit ? parseInt(limit as string) : undefined
+      });
       res.json(songs);
     } catch (error) {
       console.error("Error fetching songs:", error);
       res.status(500).json({ message: "Failed to fetch songs" });
+    }
+  });
+
+  app.get('/api/songs/trending', async (req, res) => {
+    try {
+      const songs = await storage.getTrendingSongs();
+      res.json(songs);
+    } catch (error) {
+      console.error("Error fetching trending songs:", error);
+      res.status(500).json({ message: "Failed to fetch trending songs" });
+    }
+  });
+
+  app.get('/api/songs/recommendations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const songs = await storage.getRecommendedSongs(userId);
+      res.json(songs);
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+      res.status(500).json({ message: "Failed to fetch recommendations" });
     }
   });
 

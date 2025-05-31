@@ -36,7 +36,9 @@ export interface IStorage {
   createSong(song: InsertSong): Promise<Song>;
   getSongsByArtist(artistId: number): Promise<Song[]>;
   getSong(id: string): Promise<Song | undefined>;
-  getAllSongs(): Promise<Song[]>;
+  getAllSongs(filters?: { search?: string; genre?: string; sortBy?: string; limit?: number }): Promise<Song[]>;
+  getTrendingSongs(): Promise<Song[]>;
+  getRecommendedSongs(userId: string): Promise<Song[]>;
   updateSongStats(songId: string, streamCount: number, revenue: string): Promise<void>;
   
   // Tip operations
@@ -115,8 +117,67 @@ export class DatabaseStorage implements IStorage {
     return song;
   }
 
-  async getAllSongs(): Promise<Song[]> {
-    return await db.select().from(songs).where(eq(songs.isPublished, true)).orderBy(desc(songs.createdAt));
+  async getAllSongs(filters?: { search?: string; genre?: string; sortBy?: string; limit?: number }): Promise<Song[]> {
+    let query = db.select().from(songs).where(eq(songs.isPublished, true));
+    
+    if (filters?.search) {
+      query = query.where(
+        or(
+          ilike(songs.title, `%${filters.search}%`),
+          ilike(songs.description, `%${filters.search}%`)
+        )
+      );
+    }
+    
+    if (filters?.genre) {
+      query = query.where(ilike(songs.description, `%${filters.genre}%`));
+    }
+    
+    if (filters?.sortBy === 'popular') {
+      query = query.orderBy(desc(songs.streamCount));
+    } else if (filters?.sortBy === 'recent') {
+      query = query.orderBy(desc(songs.createdAt));
+    } else {
+      query = query.orderBy(desc(songs.createdAt));
+    }
+    
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+    
+    return await query;
+  }
+
+  async getTrendingSongs(): Promise<Song[]> {
+    return await db
+      .select()
+      .from(songs)
+      .where(eq(songs.isPublished, true))
+      .orderBy(desc(songs.streamCount), desc(songs.createdAt))
+      .limit(20);
+  }
+
+  async getRecommendedSongs(userId: string): Promise<Song[]> {
+    const userStreams = await db
+      .select({ songId: streams.songId })
+      .from(streams)
+      .where(eq(streams.userId, userId))
+      .limit(10);
+    
+    const streamedSongIds = userStreams.map(s => s.songId);
+    
+    let query = db
+      .select()
+      .from(songs)
+      .where(eq(songs.isPublished, true));
+    
+    if (streamedSongIds.length > 0) {
+      query = query.where(notInArray(songs.id, streamedSongIds));
+    }
+    
+    return await query
+      .orderBy(desc(songs.streamCount))
+      .limit(15);
   }
 
   async updateSongStats(songId: string, streamCount: number, revenue: string): Promise<void> {
