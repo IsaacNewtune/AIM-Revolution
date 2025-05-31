@@ -34,13 +34,14 @@ export function MusicPlayerProvider({ children }: MusicPlayerProviderProps) {
   const [queue, setQueue] = useState<Song[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Initialize audio element
   useEffect(() => {
     if (!audioRef.current) {
-      audioRef.current = new Audio();
-      audioRef.current.volume = volume / 100;
+      const audio = new Audio();
+      audio.volume = volume / 100;
+      audioRef.current = audio;
     }
 
     const audio = audioRef.current;
