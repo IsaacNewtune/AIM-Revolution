@@ -107,13 +107,13 @@ export default function ManagerDashboard() {
                 <div className="grid grid-cols-12 gap-4 items-center">
                   <div className="col-span-4 flex items-center space-x-4">
                     <img 
-                      src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100" 
-                      alt="Artist" 
+                      src={artist.profileImageUrl || "/api/placeholder/100/100"} 
+                      alt={artist.name} 
                       className="w-12 h-12 rounded-full object-cover" 
                     />
                     <div>
                       <h3 className="font-medium">{artist.name}</h3>
-                      <p className="text-text-secondary text-sm">Electronic AI</p>
+                      <p className="text-text-secondary text-sm">{artist.genre || 'AI Music'}</p>
                     </div>
                   </div>
                   <div className="col-span-2">
@@ -129,7 +129,12 @@ export default function ManagerDashboard() {
                     <Button variant="ghost" size="icon" className="text-ai-purple hover:text-purple-400 mr-2">
                       <i className="fas fa-chart-line"></i>
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-text-secondary hover:text-white">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-text-secondary hover:text-white"
+                      onClick={() => window.location.href = `/edit-artist/${artist.id}`}
+                    >
                       <i className="fas fa-cog"></i>
                     </Button>
                   </div>
