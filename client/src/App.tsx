@@ -39,9 +39,8 @@ function Router() {
     );
   }
 
-  // If user is authenticated but still has default "listener" account type, 
-  // show account setup to let them choose their role
-  const needsAccountSetup = isAuthenticated && user && user.accountType === 'listener' && 
+  // If user is authenticated but has no account type set, show account setup
+  const needsAccountSetup = isAuthenticated && user && !user.accountType && 
     window.location.pathname !== '/account-setup';
 
   if (needsAccountSetup) {
