@@ -53,17 +53,19 @@ const upload = multer({
   }
 });
 
-// Session configuration
+// Use memory store for session to avoid database conflicts
+import MemoryStore from "memorystore";
+const MemStore = MemoryStore(session);
+
 const sessionSettings: session.SessionOptions = {
   secret: process.env.SESSION_SECRET || "dev-secret-key-change-in-production",
   resave: false,
   saveUninitialized: false,
-  store: new (connectPg(session))({
-    pool,
-    createTableIfMissing: true,
+  store: new MemStore({
+    checkPeriod: 86400000, // prune expired entries every 24h
   }),
   cookie: {
-    secure: false, // Set to true in production with HTTPS
+    secure: false,
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
   },
