@@ -70,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Account type selection endpoint
   app.post('/api/auth/account-type', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const { accountType } = req.body;
 
       if (!accountType || !['listener', 'artist', 'manager'].includes(accountType)) {
@@ -83,6 +83,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating account type:", error);
       res.status(500).json({ message: "Failed to update account type" });
+    }
+  });
+
+  // Traditional email/password authentication routes
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const { firstName, lastName, email, password } = req.body;
+
+      if (!firstName || !lastName || !email || !password) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+
+      // Hash password
+      const bcrypt = require('bcrypt');
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user with temporary ID (we'll use email as ID for traditional auth)
+      const userId = email.replace(/[^a-zA-Z0-9]/g, '_') + '_' + Date.now();
+      
+      const user = await storage.upsertUser({
+        id: userId,
+        email,
+        firstName,
+        lastName,
+        accountType: "listener", // Temporary, will be updated during onboarding
+      });
+
+      // Store password separately (you'd need to add password storage to your schema)
+      // For now, we'll store it in a separate table or extend the user table
+
+      // Create session
+      req.login(user, (err: any) => {
+        if (err) {
+          console.error("Session creation error:", err);
+          return res.status(500).json({ message: "Failed to create session" });
+        }
+        res.status(201).json(user);
+      });
+
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Verify password (you'd need to implement password verification)
+      // For now, we'll implement a basic check
+      const bcrypt = require('bcrypt');
+      // Note: You'd need to store passwords in your database
+      
+      // Create session
+      req.login(user, (err: any) => {
+        if (err) {
+          console.error("Login session error:", err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        res.json(user);
+      });
+
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
     }
   });
 

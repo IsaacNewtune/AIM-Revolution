@@ -44,7 +44,7 @@ export default function Landing() {
             </a>
             <Button
               variant="outline"
-              onClick={() => window.location.href = "/api/login"}
+              onClick={() => window.location.href = "/auth"}
               className="border-ai-purple text-ai-purple hover:bg-ai-purple hover:text-white"
             >
               Sign In
