@@ -52,8 +52,9 @@ function Router() {
     );
   }
 
-  // If user is authenticated but has no account type set, show account setup
-  const needsAccountSetup = isAuthenticated && user && !(user as any).accountType;
+  // If user is authenticated but has no valid account type set, show account setup
+  const needsAccountSetup = isAuthenticated && user && 
+    (!((user as any).accountType) || (user as any).accountType === 'pending');
 
   if (needsAccountSetup) {
     return <AccountTypeSelector />;
