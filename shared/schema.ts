@@ -60,8 +60,6 @@ export const artists = pgTable("artists", {
   twitterHandle: varchar("twitter_handle"),
   instagramHandle: varchar("instagram_handle"),
   tiktokHandle: varchar("tiktok_handle"),
-  spotifyUrl: varchar("spotify_url"),
-  soundcloudUrl: varchar("soundcloud_url"),
   youtubeUrl: varchar("youtube_url"),
   totalStreams: integer("total_streams").default(0),
   totalRevenue: decimal("total_revenue", { precision: 10, scale: 2 }).default("0"),

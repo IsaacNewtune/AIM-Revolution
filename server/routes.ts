@@ -177,8 +177,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         twitterHandle: req.body.twitterHandle || null,
         instagramHandle: req.body.instagramHandle || null,
         tiktokHandle: req.body.tiktokHandle || null,
-        spotifyUrl: req.body.spotifyUrl || null,
-        soundcloudUrl: req.body.soundcloudUrl || null,
         youtubeUrl: req.body.youtubeUrl || null,
         profileImageUrl: profileImagePath || null,
         bannerImageUrl: bannerImagePath || null,

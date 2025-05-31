@@ -26,8 +26,6 @@ export default function CreateArtistProfile() {
     twitterHandle: '',
     instagramHandle: '',
     tiktokHandle: '',
-    spotifyUrl: '',
-    soundcloudUrl: '',
     youtubeUrl: ''
   });
   
@@ -276,7 +274,7 @@ export default function CreateArtistProfile() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Globe className="w-5 h-5" />
-                  Social Media & Streaming Platforms
+                  Social Media & Online Presence
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -318,26 +316,6 @@ export default function CreateArtistProfile() {
                       value={formData.tiktokHandle}
                       onChange={(e) => handleInputChange('tiktokHandle', e.target.value)}
                       placeholder="@username"
-                      className="bg-gray-800 border-gray-600"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="spotify">Spotify URL</Label>
-                    <Input
-                      id="spotify"
-                      value={formData.spotifyUrl}
-                      onChange={(e) => handleInputChange('spotifyUrl', e.target.value)}
-                      placeholder="https://open.spotify.com/artist/..."
-                      className="bg-gray-800 border-gray-600"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="soundcloud">SoundCloud URL</Label>
-                    <Input
-                      id="soundcloud"
-                      value={formData.soundcloudUrl}
-                      onChange={(e) => handleInputChange('soundcloudUrl', e.target.value)}
-                      placeholder="https://soundcloud.com/artistname"
                       className="bg-gray-800 border-gray-600"
                     />
                   </div>
