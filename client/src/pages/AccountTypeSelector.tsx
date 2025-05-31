@@ -12,36 +12,24 @@ export default function AccountTypeSelector() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedType, setSelectedType] = useState<string>(() => {
-    // Check if user pre-selected an account type from the landing page
-    return localStorage.getItem('selectedAccountType') || '';
-  });
+  const [selectedType, setSelectedType] = useState<string>("");
 
   const updateAccountTypeMutation = useMutation({
     mutationFn: async (accountType: string) => {
       await apiRequest('PUT', '/api/auth/user/account-type', { accountType });
     },
-    onSuccess: async (_, accountType) => {
-      // Clear the stored account type preference
-      localStorage.removeItem('selectedAccountType');
-      
-      // Invalidate and refetch user data to ensure fresh authentication state
-      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
-      
+    onSuccess: (_, accountType) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       toast({ title: "Account type updated successfully!" });
       
-      // Small delay to ensure authentication state is updated
-      setTimeout(() => {
-        // Route based on account type
-        if (accountType === 'listener') {
-          // Listeners go to profile setup to complete their account
-          setLocation('/profile-setup');
-        } else {
-          // For artist and manager accounts, redirect to subscription plans
-          setLocation('/subscription-plans');
-        }
-      }, 100);
+      // Route based on account type
+      if (accountType === 'listener') {
+        // Listeners get free access, go directly to home
+        setLocation('/');
+      } else {
+        // For artist and manager accounts, redirect to subscription plans
+        setLocation('/subscription-plans');
+      }
     },
     onError: () => {
       toast({ 

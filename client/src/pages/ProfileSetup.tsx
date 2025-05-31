@@ -16,6 +16,7 @@ export default function ProfileSetup() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const profilePicRef = useRef<HTMLInputElement>(null);
+  const headerImageRef = useRef<HTMLInputElement>(null);
   
   const [profileData, setProfileData] = useState({
     firstName: (user as any)?.firstName || '',
@@ -23,9 +24,8 @@ export default function ProfileSetup() {
     bio: '',
     location: '',
     profileImage: null as File | null,
+    headerImage: null as File | null,
   });
-
-  const [isCompleting, setIsCompleting] = useState(false);
 
   const [creditAmount, setCreditAmount] = useState('');
   const [paymentData, setPaymentData] = useState({
@@ -39,17 +39,13 @@ export default function ProfileSetup() {
     queryKey: ['/api/tips/sent'],
   });
 
-  const completeSetupMutation = useMutation({
+  const updateProfileMutation = useMutation({
     mutationFn: async (data: FormData) => {
       return await apiRequest("POST", "/api/user/update-profile", data);
     },
     onSuccess: () => {
-      toast({ title: "Welcome to AiBeats!", description: "Your account has been set up successfully!" });
+      toast({ title: "Success", description: "Profile updated successfully!" });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      // Redirect to home dashboard after successful setup
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1500);
     },
     onError: (error: Error) => {
       toast({ 

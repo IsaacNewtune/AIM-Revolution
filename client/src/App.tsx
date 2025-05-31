@@ -39,48 +39,45 @@ function Router() {
     );
   }
 
-  // If not authenticated, show public pages
-  if (!isAuthenticated) {
-    return (
-      <Switch>
-        <Route path="/" component={Landing} />
-        <Route path="/signup" component={SignUp} />
-        <Route path="/artist-signup" component={ArtistSignUp} />
-        <Route path="/manager-signup" component={ManagerSignUp} />
-        <Route component={Landing} />
-      </Switch>
-    );
-  }
-
-  // If user is authenticated but has no valid account type set, show account setup
-  const userAccountType = (user as any)?.accountType || (user as any)?.account_type;
-  const needsAccountSetup = isAuthenticated && user && 
-    (!userAccountType || userAccountType === 'pending' || !['listener', 'artist', 'manager'].includes(userAccountType));
+  // If user is authenticated but still has default "listener" account type, 
+  // show account setup to let them choose their role
+  const needsAccountSetup = isAuthenticated && user && user.accountType === 'listener' && 
+    window.location.pathname !== '/account-setup';
 
   if (needsAccountSetup) {
     return <AccountTypeSelector />;
   }
 
-  // Authenticated user routes
   return (
     <Switch>
-      <Route path="/account-setup" component={AccountTypeSelector} />
-      <Route path="/subscription-plans" component={SubscriptionPlans} />
-      <Route path="/payment-setup" component={PaymentSetup} />
-      <Route path="/" component={Home} />
-      <Route path="/profile-setup" component={ProfileSetup} />
-      <Route path="/discover" component={Discover} />
-      <Route path="/analytics" component={ArtistAnalytics} />
-      <Route path="/artist-analytics/:id" component={ArtistAnalytics} />
-      <Route path="/playlists" component={Playlists} />
-      <Route path="/playlist/:id" component={PlaylistDetail} />
-      <Route path="/listener" component={ListenerDashboard} />
-      <Route path="/artist" component={ArtistDashboard} />
-      <Route path="/manager" component={ManagerDashboard} />
-      <Route path="/manager/create-artist" component={CreateArtistProfile} />
-      <Route path="/edit-artist/:id" component={EditArtistProfile} />
-      <Route path="/upload" component={SongUpload} />
-      <Route path="/admin" component={AdminDashboard} />
+      {!isAuthenticated ? (
+        <>
+          <Route path="/" component={Landing} />
+          <Route path="/signup" component={SignUp} />
+          <Route path="/artist-signup" component={ArtistSignUp} />
+          <Route path="/manager-signup" component={ManagerSignUp} />
+          <Route path="/subscription-plans" component={SubscriptionPlans} />
+          <Route path="/payment-setup" component={PaymentSetup} />
+        </>
+      ) : (
+        <>
+          <Route path="/account-setup" component={AccountTypeSelector} />
+          <Route path="/" component={Home} />
+          <Route path="/profile-setup" component={ProfileSetup} />
+          <Route path="/discover" component={Discover} />
+          <Route path="/analytics" component={ArtistAnalytics} />
+          <Route path="/artist-analytics/:id" component={ArtistAnalytics} />
+          <Route path="/playlists" component={Playlists} />
+          <Route path="/playlist/:id" component={PlaylistDetail} />
+          <Route path="/listener" component={ListenerDashboard} />
+          <Route path="/artist" component={ArtistDashboard} />
+          <Route path="/manager" component={ManagerDashboard} />
+          <Route path="/manager/create-artist" component={CreateArtistProfile} />
+          <Route path="/edit-artist/:id" component={EditArtistProfile} />
+          <Route path="/upload" component={SongUpload} />
+          <Route path="/admin" component={AdminDashboard} />
+        </>
+      )}
       <Route component={NotFound} />
     </Switch>
   );

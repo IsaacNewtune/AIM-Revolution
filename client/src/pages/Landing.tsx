@@ -7,13 +7,18 @@ export default function Landing() {
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const selectAccountType = (type: string) => {
-    // Store account type preference in localStorage for after authentication
+    // Store account type preference in localStorage for the setup flow
     localStorage.setItem('selectedAccountType', type);
     setShowAccountModal(false);
     
-    // Redirect directly to Replit authentication
-    // After authentication, user will be directed to account setup
-    window.location.href = "/api/login";
+    // Route to appropriate sign-up page
+    if (type === 'artist') {
+      window.location.href = "/artist-signup";
+    } else if (type === 'manager') {
+      window.location.href = "/manager-signup";
+    } else {
+      window.location.href = "/signup";
+    }
   };
 
   return (
