@@ -5,7 +5,15 @@ import multer from "multer";
 import path from "path";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertSongSchema, insertTipSchema, insertPlaylistSchema, insertArtistSchema } from "@shared/schema";
+import { 
+  insertSongSchema, 
+  insertTipSchema, 
+  insertPlaylistSchema, 
+  insertArtistSchema,
+  insertSongCommentSchema,
+  insertSongReviewSchema,
+  insertArtistReviewSchema
+} from "@shared/schema";
 import { z } from "zod";
 
 // Configure multer for file uploads

@@ -7,6 +7,11 @@ import {
   playlists,
   playlistSongs,
   managerArtists,
+  artistFollows,
+  songComments,
+  songReviews,
+  artistReviews,
+  commentLikes,
   type User,
   type UpsertUser,
   type Artist,
@@ -19,6 +24,16 @@ import {
   type Playlist,
   type InsertPlaylist,
   type ManagerArtist,
+  type ArtistFollow,
+  type InsertArtistFollow,
+  type SongComment,
+  type InsertSongComment,
+  type SongReview,
+  type InsertSongReview,
+  type ArtistReview,
+  type InsertArtistReview,
+  type CommentLike,
+  type InsertCommentLike,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, or, ilike, notInArray } from "drizzle-orm";
@@ -77,6 +92,34 @@ export interface IStorage {
   
   // Stripe operations
   updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<void>;
+  
+  // Social Features - Artist Following
+  followArtist(userId: string, artistId: number): Promise<ArtistFollow>;
+  unfollowArtist(userId: string, artistId: number): Promise<void>;
+  getFollowedArtists(userId: string): Promise<Artist[]>;
+  getArtistFollowers(artistId: number): Promise<User[]>;
+  isFollowingArtist(userId: string, artistId: number): Promise<boolean>;
+  
+  // Social Features - Comments
+  addSongComment(comment: InsertSongComment): Promise<SongComment>;
+  getSongComments(songId: string): Promise<Array<SongComment & { user: { firstName: string | null; lastName: string | null; profileImageUrl: string | null }; likesCount: number; isLiked?: boolean; replies?: SongComment[] }>>;
+  deleteSongComment(commentId: string, userId: string): Promise<void>;
+  
+  // Social Features - Comment Likes
+  likeSongComment(userId: string, commentId: string): Promise<CommentLike>;
+  unlikeSongComment(userId: string, commentId: string): Promise<void>;
+  
+  // Social Features - Reviews
+  addSongReview(review: InsertSongReview): Promise<SongReview>;
+  getSongReviews(songId: string): Promise<Array<SongReview & { user: { firstName: string | null; lastName: string | null; profileImageUrl: string | null } }>>;
+  addArtistReview(review: InsertArtistReview): Promise<ArtistReview>;
+  getArtistReviews(artistId: number): Promise<Array<ArtistReview & { user: { firstName: string | null; lastName: string | null; profileImageUrl: string | null } }>>;
+  getUserSongReview(userId: string, songId: string): Promise<SongReview | undefined>;
+  getUserArtistReview(userId: string, artistId: number): Promise<ArtistReview | undefined>;
+  updateSongReview(reviewId: string, userId: string, data: { rating: number; reviewText?: string }): Promise<SongReview>;
+  updateArtistReview(reviewId: string, userId: string, data: { rating: number; reviewText?: string }): Promise<ArtistReview>;
+  deleteSongReview(reviewId: string, userId: string): Promise<void>;
+  deleteArtistReview(reviewId: string, userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -461,6 +504,249 @@ export class DatabaseStorage implements IStorage {
       updateData.stripeSubscriptionId = stripeSubscriptionId;
     }
     await db.update(users).set(updateData).where(eq(users.id, userId));
+  }
+
+  // Social Features - Artist Following
+  async followArtist(userId: string, artistId: number): Promise<ArtistFollow> {
+    const [follow] = await db
+      .insert(artistFollows)
+      .values({ followerId: userId, artistId })
+      .returning();
+    return follow;
+  }
+
+  async unfollowArtist(userId: string, artistId: number): Promise<void> {
+    await db
+      .delete(artistFollows)
+      .where(and(eq(artistFollows.followerId, userId), eq(artistFollows.artistId, artistId)));
+  }
+
+  async getFollowedArtists(userId: string): Promise<Artist[]> {
+    const follows = await db
+      .select({ artist: artists })
+      .from(artistFollows)
+      .innerJoin(artists, eq(artistFollows.artistId, artists.id))
+      .where(eq(artistFollows.followerId, userId))
+      .orderBy(desc(artistFollows.createdAt));
+    
+    return follows.map(f => f.artist);
+  }
+
+  async getArtistFollowers(artistId: number): Promise<User[]> {
+    const follows = await db
+      .select({ user: users })
+      .from(artistFollows)
+      .innerJoin(users, eq(artistFollows.followerId, users.id))
+      .where(eq(artistFollows.artistId, artistId))
+      .orderBy(desc(artistFollows.createdAt));
+    
+    return follows.map(f => f.user);
+  }
+
+  async isFollowingArtist(userId: string, artistId: number): Promise<boolean> {
+    const [follow] = await db
+      .select()
+      .from(artistFollows)
+      .where(and(eq(artistFollows.followerId, userId), eq(artistFollows.artistId, artistId)));
+    return !!follow;
+  }
+
+  // Social Features - Comments
+  async addSongComment(comment: InsertSongComment): Promise<SongComment> {
+    const [newComment] = await db
+      .insert(songComments)
+      .values(comment)
+      .returning();
+    return newComment;
+  }
+
+  async getSongComments(songId: string): Promise<Array<SongComment & { user: { firstName: string | null; lastName: string | null; profileImageUrl: string | null }; likesCount: number; isLiked?: boolean; replies?: SongComment[] }>> {
+    const comments = await db
+      .select({
+        id: songComments.id,
+        userId: songComments.userId,
+        songId: songComments.songId,
+        comment: songComments.comment,
+        parentId: songComments.parentId,
+        createdAt: songComments.createdAt,
+        user: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+        likesCount: sql<number>`(
+          SELECT COUNT(*)::int 
+          FROM ${commentLikes} 
+          WHERE ${commentLikes.commentId} = ${songComments.id}
+        )`,
+      })
+      .from(songComments)
+      .innerJoin(users, eq(songComments.userId, users.id))
+      .where(and(eq(songComments.songId, songId), sql`${songComments.parentId} IS NULL`))
+      .orderBy(desc(songComments.createdAt));
+
+    // Get replies for each comment
+    const commentsWithReplies = await Promise.all(
+      comments.map(async (comment) => {
+        const replies = await db
+          .select({
+            id: songComments.id,
+            userId: songComments.userId,
+            songId: songComments.songId,
+            comment: songComments.comment,
+            parentId: songComments.parentId,
+            createdAt: songComments.createdAt,
+            user: {
+              firstName: users.firstName,
+              lastName: users.lastName,
+              profileImageUrl: users.profileImageUrl,
+            },
+          })
+          .from(songComments)
+          .innerJoin(users, eq(songComments.userId, users.id))
+          .where(eq(songComments.parentId, comment.id))
+          .orderBy(songComments.createdAt);
+
+        return {
+          ...comment,
+          replies,
+        };
+      })
+    );
+
+    return commentsWithReplies;
+  }
+
+  async deleteSongComment(commentId: string, userId: string): Promise<void> {
+    await db
+      .delete(songComments)
+      .where(and(eq(songComments.id, commentId), eq(songComments.userId, userId)));
+  }
+
+  // Social Features - Comment Likes
+  async likeSongComment(userId: string, commentId: string): Promise<CommentLike> {
+    const [like] = await db
+      .insert(commentLikes)
+      .values({ userId, commentId })
+      .returning();
+    return like;
+  }
+
+  async unlikeSongComment(userId: string, commentId: string): Promise<void> {
+    await db
+      .delete(commentLikes)
+      .where(and(eq(commentLikes.userId, userId), eq(commentLikes.commentId, commentId)));
+  }
+
+  // Social Features - Reviews
+  async addSongReview(review: InsertSongReview): Promise<SongReview> {
+    const [newReview] = await db
+      .insert(songReviews)
+      .values(review)
+      .returning();
+    return newReview;
+  }
+
+  async getSongReviews(songId: string): Promise<Array<SongReview & { user: { firstName: string | null; lastName: string | null; profileImageUrl: string | null } }>> {
+    const reviews = await db
+      .select({
+        id: songReviews.id,
+        userId: songReviews.userId,
+        songId: songReviews.songId,
+        rating: songReviews.rating,
+        reviewText: songReviews.reviewText,
+        createdAt: songReviews.createdAt,
+        updatedAt: songReviews.updatedAt,
+        user: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(songReviews)
+      .innerJoin(users, eq(songReviews.userId, users.id))
+      .where(eq(songReviews.songId, songId))
+      .orderBy(desc(songReviews.createdAt));
+
+    return reviews;
+  }
+
+  async addArtistReview(review: InsertArtistReview): Promise<ArtistReview> {
+    const [newReview] = await db
+      .insert(artistReviews)
+      .values(review)
+      .returning();
+    return newReview;
+  }
+
+  async getArtistReviews(artistId: number): Promise<Array<ArtistReview & { user: { firstName: string | null; lastName: string | null; profileImageUrl: string | null } }>> {
+    const reviews = await db
+      .select({
+        id: artistReviews.id,
+        userId: artistReviews.userId,
+        artistId: artistReviews.artistId,
+        rating: artistReviews.rating,
+        reviewText: artistReviews.reviewText,
+        createdAt: artistReviews.createdAt,
+        updatedAt: artistReviews.updatedAt,
+        user: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(artistReviews)
+      .innerJoin(users, eq(artistReviews.userId, users.id))
+      .where(eq(artistReviews.artistId, artistId))
+      .orderBy(desc(artistReviews.createdAt));
+
+    return reviews;
+  }
+
+  async getUserSongReview(userId: string, songId: string): Promise<SongReview | undefined> {
+    const [review] = await db
+      .select()
+      .from(songReviews)
+      .where(and(eq(songReviews.userId, userId), eq(songReviews.songId, songId)));
+    return review;
+  }
+
+  async getUserArtistReview(userId: string, artistId: number): Promise<ArtistReview | undefined> {
+    const [review] = await db
+      .select()
+      .from(artistReviews)
+      .where(and(eq(artistReviews.userId, userId), eq(artistReviews.artistId, artistId)));
+    return review;
+  }
+
+  async updateSongReview(reviewId: string, userId: string, data: { rating: number; reviewText?: string }): Promise<SongReview> {
+    const [review] = await db
+      .update(songReviews)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(songReviews.id, reviewId), eq(songReviews.userId, userId)))
+      .returning();
+    return review;
+  }
+
+  async updateArtistReview(reviewId: string, userId: string, data: { rating: number; reviewText?: string }): Promise<ArtistReview> {
+    const [review] = await db
+      .update(artistReviews)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(artistReviews.id, reviewId), eq(artistReviews.userId, userId)))
+      .returning();
+    return review;
+  }
+
+  async deleteSongReview(reviewId: string, userId: string): Promise<void> {
+    await db
+      .delete(songReviews)
+      .where(and(eq(songReviews.id, reviewId), eq(songReviews.userId, userId)));
+  }
+
+  async deleteArtistReview(reviewId: string, userId: string): Promise<void> {
+    await db
+      .delete(artistReviews)
+      .where(and(eq(artistReviews.id, reviewId), eq(artistReviews.userId, userId)));
   }
 }
 
