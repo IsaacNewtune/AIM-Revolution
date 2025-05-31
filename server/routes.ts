@@ -1326,6 +1326,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded files
   app.use('/uploads', express.static('uploads'));
 
+  // Seed database with sample content
+  app.post('/api/admin/seed', async (req, res) => {
+    try {
+      const { seedDatabase } = await import('./seed-data');
+      await seedDatabase();
+      res.json({ message: 'Database seeded successfully' });
+    } catch (error) {
+      console.error('Seeding error:', error);
+      res.status(500).json({ message: 'Failed to seed database' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
