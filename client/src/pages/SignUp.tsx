@@ -36,8 +36,11 @@ export default function SignUp() {
     onSuccess: () => {
       localStorage.removeItem('selectedAccountType');
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      toast({ title: "Registration successful!" });
-      setLocation('/');
+      toast({ 
+        title: "Account created successfully!", 
+        description: "Welcome to AiBeats! Now choose your subscription plan." 
+      });
+      setLocation('/subscription-plans');
     },
     onError: (error: Error) => {
       toast({
