@@ -143,6 +143,54 @@ export const managerArtists = pgTable("manager_artists", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Artist follows table
+export const artistFollows = pgTable("artist_follows", {
+  id: serial("id").primaryKey(),
+  followerId: varchar("follower_id").notNull().references(() => users.id),
+  artistId: integer("artist_id").notNull().references(() => artists.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Song comments table
+export const songComments = pgTable("song_comments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  songId: uuid("song_id").notNull().references(() => songs.id),
+  comment: text("comment").notNull(),
+  parentId: uuid("parent_id").references(() => songComments.id), // for replies
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Song reviews table
+export const songReviews = pgTable("song_reviews", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  songId: uuid("song_id").notNull().references(() => songs.id),
+  rating: integer("rating").notNull(), // 1-5 stars
+  reviewText: text("review_text"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Artist reviews table
+export const artistReviews = pgTable("artist_reviews", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  artistId: integer("artist_id").notNull().references(() => artists.id),
+  rating: integer("rating").notNull(), // 1-5 stars
+  reviewText: text("review_text"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Comment likes table
+export const commentLikes = pgTable("comment_likes", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  commentId: uuid("comment_id").notNull().references(() => songComments.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   artist: one(artists, {
@@ -151,6 +199,11 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   playlists: many(playlists),
   managedArtists: many(managerArtists),
+  followedArtists: many(artistFollows),
+  songComments: many(songComments),
+  songReviews: many(songReviews),
+  artistReviews: many(artistReviews),
+  commentLikes: many(commentLikes),
 }));
 
 export const artistsRelations = relations(artists, ({ one, many }) => ({
@@ -162,6 +215,8 @@ export const artistsRelations = relations(artists, ({ one, many }) => ({
   albums: many(albums),
   tips: many(tips),
   managers: many(managerArtists),
+  followers: many(artistFollows),
+  reviews: many(artistReviews),
 }));
 
 export const songsRelations = relations(songs, ({ one, many }) => ({
@@ -173,6 +228,8 @@ export const songsRelations = relations(songs, ({ one, many }) => ({
   tips: many(tips),
   playlistSongs: many(playlistSongs),
   albumSongs: many(albumSongs),
+  comments: many(songComments),
+  reviews: many(songReviews),
 }));
 
 export const albumsRelations = relations(albums, ({ one, many }) => ({
@@ -228,6 +285,67 @@ export const managerArtistsRelations = relations(managerArtists, ({ one }) => ({
   }),
 }));
 
+export const artistFollowsRelations = relations(artistFollows, ({ one }) => ({
+  follower: one(users, {
+    fields: [artistFollows.followerId],
+    references: [users.id],
+  }),
+  artist: one(artists, {
+    fields: [artistFollows.artistId],
+    references: [artists.id],
+  }),
+}));
+
+export const songCommentsRelations = relations(songComments, ({ one, many }) => ({
+  user: one(users, {
+    fields: [songComments.userId],
+    references: [users.id],
+  }),
+  song: one(songs, {
+    fields: [songComments.songId],
+    references: [songs.id],
+  }),
+  parent: one(songComments, {
+    fields: [songComments.parentId],
+    references: [songComments.id],
+  }),
+  replies: many(songComments),
+  likes: many(commentLikes),
+}));
+
+export const songReviewsRelations = relations(songReviews, ({ one }) => ({
+  user: one(users, {
+    fields: [songReviews.userId],
+    references: [users.id],
+  }),
+  song: one(songs, {
+    fields: [songReviews.songId],
+    references: [songs.id],
+  }),
+}));
+
+export const artistReviewsRelations = relations(artistReviews, ({ one }) => ({
+  user: one(users, {
+    fields: [artistReviews.userId],
+    references: [users.id],
+  }),
+  artist: one(artists, {
+    fields: [artistReviews.artistId],
+    references: [artists.id],
+  }),
+}));
+
+export const commentLikesRelations = relations(commentLikes, ({ one }) => ({
+  user: one(users, {
+    fields: [commentLikes.userId],
+    references: [users.id],
+  }),
+  comment: one(songComments, {
+    fields: [commentLikes.commentId],
+    references: [songComments.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
@@ -257,6 +375,33 @@ export const insertTipSchema = createInsertSchema(tips).omit({
 });
 
 export const insertPlaylistSchema = createInsertSchema(playlists).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertArtistFollowSchema = createInsertSchema(artistFollows).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSongCommentSchema = createInsertSchema(songComments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSongReviewSchema = createInsertSchema(songReviews).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertArtistReviewSchema = createInsertSchema(artistReviews).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCommentLikeSchema = createInsertSchema(commentLikes).omit({
   id: true,
   createdAt: true,
 });
