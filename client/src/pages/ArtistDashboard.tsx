@@ -111,12 +111,20 @@ export default function ArtistDashboard() {
                 alt="Artist Profile" 
                 className="w-32 h-32 rounded-full object-cover border-4 border-white" 
               />
-              <div>
+              <div className="flex-1">
                 <h1 className="text-4xl font-bold mb-2">
                   {artist?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'AI Artist'}
                 </h1>
                 <p className="text-text-secondary mb-2">{artist?.location || 'Location not set'}</p>
                 <p className="text-sm">Followers: {artist?.followers || 0}</p>
+              </div>
+              <div className="ml-6">
+                <Button 
+                  onClick={() => window.location.href = '/upload'}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 text-lg"
+                >
+                  Upload Music
+                </Button>
               </div>
             </div>
           </div>
