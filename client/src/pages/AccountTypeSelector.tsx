@@ -18,18 +18,24 @@ export default function AccountTypeSelector() {
     mutationFn: async (accountType: string) => {
       await apiRequest('PUT', '/api/auth/user/account-type', { accountType });
     },
-    onSuccess: (_, accountType) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+    onSuccess: async (_, accountType) => {
+      // Invalidate and refetch user data to ensure fresh authentication state
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
+      
       toast({ title: "Account type updated successfully!" });
       
-      // Route based on account type
-      if (accountType === 'listener') {
-        // Listeners get free access, go directly to home
-        setLocation('/');
-      } else {
-        // For artist and manager accounts, redirect to subscription plans
-        setLocation('/subscription-plans');
-      }
+      // Small delay to ensure authentication state is updated
+      setTimeout(() => {
+        // Route based on account type
+        if (accountType === 'listener') {
+          // Listeners get free access, go directly to home
+          setLocation('/');
+        } else {
+          // For artist and manager accounts, redirect to subscription plans
+          setLocation('/subscription-plans');
+        }
+      }, 100);
     },
     onError: () => {
       toast({ 

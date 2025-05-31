@@ -47,16 +47,13 @@ function Router() {
         <Route path="/signup" component={SignUp} />
         <Route path="/artist-signup" component={ArtistSignUp} />
         <Route path="/manager-signup" component={ManagerSignUp} />
-        <Route path="/subscription-plans" component={SubscriptionPlans} />
-        <Route path="/payment-setup" component={PaymentSetup} />
         <Route component={Landing} />
       </Switch>
     );
   }
 
   // If user is authenticated but has no account type set, show account setup
-  const needsAccountSetup = isAuthenticated && user && !(user as any).accountType && 
-    window.location.pathname !== '/account-setup';
+  const needsAccountSetup = isAuthenticated && user && !(user as any).accountType;
 
   if (needsAccountSetup) {
     return <AccountTypeSelector />;
@@ -66,6 +63,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/account-setup" component={AccountTypeSelector} />
+      <Route path="/subscription-plans" component={SubscriptionPlans} />
+      <Route path="/payment-setup" component={PaymentSetup} />
       <Route path="/" component={Home} />
       <Route path="/profile-setup" component={ProfileSetup} />
       <Route path="/discover" component={Discover} />
