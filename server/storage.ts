@@ -418,12 +418,39 @@ export class DatabaseStorage implements IStorage {
     return newTip;
   }
 
-  async getTipsByArtist(artistId: number): Promise<Tip[]> {
-    return await db.select().from(tips).where(eq(tips.toArtistId, artistId)).orderBy(desc(tips.createdAt));
+  async getTipsByArtist(artistId: number): Promise<Array<Tip & { user: { firstName: string | null; lastName: string | null; profileImageUrl: string | null } }>> {
+    const results = await db
+      .select({
+        id: tips.id,
+        toArtistId: tips.toArtistId,
+        fromUserId: tips.fromUserId,
+        songId: tips.songId,
+        amount: tips.amount,
+        message: tips.message,
+        artistReaction: tips.artistReaction,
+        createdAt: tips.createdAt,
+        user: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        }
+      })
+      .from(tips)
+      .leftJoin(users, eq(tips.fromUserId, users.id))
+      .where(eq(tips.toArtistId, artistId))
+      .orderBy(desc(tips.createdAt));
+    
+    return results;
   }
 
   async getTipsByUser(userId: string): Promise<Tip[]> {
     return await db.select().from(tips).where(eq(tips.fromUserId, userId)).orderBy(desc(tips.createdAt));
+  }
+
+  async addTipReaction(tipId: string, reactionType: 'thumbs_up' | 'heart'): Promise<void> {
+    await db.update(tips).set({
+      artistReaction: reactionType
+    }).where(eq(tips.id, tipId));
   }
 
   // Stream operations
