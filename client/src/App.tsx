@@ -20,6 +20,7 @@ import ManagerSignUp from "@/pages/ManagerSignUp";
 import Playlists from "@/pages/Playlists";
 import PlaylistDetail from "@/pages/PlaylistDetail";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AccountTypeSelector from "@/pages/AccountTypeSelector";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -46,6 +47,7 @@ function Router() {
         </>
       ) : (
         <>
+          <Route path="/account-setup" component={AccountTypeSelector} />
           <Route path="/" component={Home} />
           <Route path="/profile-setup" component={ProfileSetup} />
           <Route path="/discover" component={Discover} />
