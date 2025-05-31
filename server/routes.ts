@@ -4,7 +4,9 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import path from "path";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 import { 
   insertSongSchema, 
   insertTipSchema, 
@@ -51,16 +53,44 @@ const upload = multer({
   }
 });
 
+// Session configuration
+const sessionSettings: session.SessionOptions = {
+  secret: process.env.SESSION_SECRET || "dev-secret-key-change-in-production",
+  resave: false,
+  saveUninitialized: false,
+  store: new (connectPg(session))({
+    pool,
+    createTableIfMissing: true,
+  }),
+  cookie: {
+    secure: false, // Set to true in production with HTTPS
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  },
+};
+
+// Middleware for checking authentication
+const requireAuth = (req: any, res: any, next: any) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+  // Setup session middleware
+  app.use(session(sessionSettings));
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      // Remove password from response
+      const { password, ...userResponse } = user;
+      res.json(userResponse);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -68,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Account type selection endpoint
-  app.post('/api/auth/account-type', isAuthenticated, async (req: any, res) => {
+  app.post('/api/auth/account-type', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       const { accountType } = req.body;
@@ -182,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/auth/user/account-type', isAuthenticated, async (req: any, res) => {
+  app.put('/api/auth/user/account-type', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { accountType } = req.body;
@@ -201,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User routes
-  app.post('/api/user/update-profile', isAuthenticated, upload.fields([
+  app.post('/api/user/update-profile', requireAuth, upload.fields([
     { name: 'profileImage', maxCount: 1 },
     { name: 'headerImage', maxCount: 1 }
   ]), async (req: any, res) => {
@@ -231,7 +261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/user/setup', isAuthenticated, async (req: any, res) => {
+  app.post('/api/user/setup', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { accountType, name, bio, location } = req.body;
@@ -266,7 +296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Artist routes
-  app.post('/api/artists', isAuthenticated, upload.fields([
+  app.post('/api/artists', requireAuth, upload.fields([
     { name: 'profileImage', maxCount: 1 },
     { name: 'bannerImage', maxCount: 1 }
   ]), async (req: any, res) => {
@@ -310,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/artist/profile', isAuthenticated, async (req: any, res) => {
+  app.get('/api/artist/profile', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const artist = await storage.getArtistByUserId(userId);
@@ -325,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Song routes - Multiple song upload
-  app.post('/api/songs/upload', isAuthenticated, upload.any(), async (req: any, res) => {
+  app.post('/api/songs/upload', requireAuth, upload.any(), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const artist = await storage.getArtistByUserId(userId);
@@ -405,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/songs/recommendations', isAuthenticated, async (req: any, res) => {
+  app.get('/api/songs/recommendations', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const songs = await storage.getRecommendedSongs(userId);
@@ -441,7 +471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Stream routes
-  app.post('/api/streams', isAuthenticated, async (req: any, res) => {
+  app.post('/api/streams', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { songId } = req.body;
@@ -457,7 +487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/streams/history', isAuthenticated, async (req: any, res) => {
+  app.get('/api/streams/history', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const streams = await storage.getStreamsByUser(userId);
@@ -469,7 +499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Playlist routes
-  app.get("/api/playlists", isAuthenticated, async (req: any, res) => {
+  app.get("/api/playlists", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const playlists = await storage.getPlaylistsByUser(userId);
@@ -523,7 +553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/playlists", isAuthenticated, async (req: any, res) => {
+  app.post("/api/playlists", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { title, description, isPublic } = req.body;
@@ -546,7 +576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/playlists/:id", isAuthenticated, async (req: any, res) => {
+  app.put("/api/playlists/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { id } = req.params;
@@ -578,7 +608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/playlists/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/playlists/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { id } = req.params;
@@ -600,7 +630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/playlists/:id/songs", isAuthenticated, async (req: any, res) => {
+  app.post("/api/playlists/:id/songs", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { id } = req.params;
@@ -627,7 +657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/playlists/:id/songs/:songId", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/playlists/:id/songs/:songId", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { id, songId } = req.params;
@@ -650,7 +680,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Tip routes
-  app.post('/api/tips', isAuthenticated, async (req: any, res) => {
+  app.post('/api/tips', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const tipData = insertTipSchema.parse({
@@ -676,7 +706,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/tips/sent', isAuthenticated, async (req: any, res) => {
+  app.get('/api/tips/sent', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const tips = await storage.getTipsByUser(userId);
@@ -699,7 +729,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Credit routes
-  app.post('/api/credits/purchase', isAuthenticated, async (req: any, res) => {
+  app.post('/api/credits/purchase', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { amount } = req.body;
@@ -721,7 +751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Playlist routes
-  app.post('/api/playlists', isAuthenticated, async (req: any, res) => {
+  app.post('/api/playlists', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const playlistData = insertPlaylistSchema.parse({
@@ -737,7 +767,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/playlists', isAuthenticated, async (req: any, res) => {
+  app.get('/api/playlists', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const playlists = await storage.getPlaylistsByUser(userId);
@@ -749,7 +779,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Artist analytics routes
-  app.get('/api/artists/:id/analytics', isAuthenticated, async (req: any, res) => {
+  app.get('/api/artists/:id/analytics', requireAuth, async (req: any, res) => {
     try {
       const artistId = parseInt(req.params.id);
       const userId = req.user.claims.sub;
@@ -768,7 +798,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/artists/:id/revenue-breakdown', isAuthenticated, async (req: any, res) => {
+  app.get('/api/artists/:id/revenue-breakdown', requireAuth, async (req: any, res) => {
     try {
       const artistId = parseInt(req.params.id);
       const userId = req.user.claims.sub;
@@ -788,7 +818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Manager routes
-  app.get('/api/manager/artists', isAuthenticated, async (req: any, res) => {
+  app.get('/api/manager/artists', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const artists = await storage.getArtistsByManager(userId);
@@ -799,7 +829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/manager/artists', isAuthenticated, async (req: any, res) => {
+  app.post('/api/manager/artists', requireAuth, async (req: any, res) => {
     try {
       const managerId = req.user.claims.sub;
       const { artistId, revenueShare } = req.body;
@@ -813,7 +843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get individual artist by ID
-  app.get('/api/artists/:id', isAuthenticated, async (req: any, res) => {
+  app.get('/api/artists/:id', requireAuth, async (req: any, res) => {
     try {
       const artistId = parseInt(req.params.id);
       const artist = await storage.getArtistById(artistId);
@@ -831,7 +861,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/artists/:id', upload.fields([
     { name: 'profileImage', maxCount: 1 },
     { name: 'bannerImage', maxCount: 1 }
-  ]), isAuthenticated, async (req: any, res) => {
+  ]), requireAuth, async (req: any, res) => {
     try {
       const artistId = parseInt(req.params.id);
       
@@ -872,7 +902,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Artist Analytics endpoints
-  app.get('/api/artists/:id/analytics', isAuthenticated, async (req: any, res) => {
+  app.get('/api/artists/:id/analytics', requireAuth, async (req: any, res) => {
     try {
       const artistId = parseInt(req.params.id);
       const analytics = await storage.getArtistAnalytics(artistId);
@@ -883,7 +913,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/artists/:id/revenue-breakdown', isAuthenticated, async (req: any, res) => {
+  app.get('/api/artists/:id/revenue-breakdown', requireAuth, async (req: any, res) => {
     try {
       const artistId = parseInt(req.params.id);
       const revenueBreakdown = await storage.getArtistRevenueBreakdown(artistId);
@@ -894,7 +924,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/artists/:id/tips', isAuthenticated, async (req: any, res) => {
+  app.get('/api/artists/:id/tips', requireAuth, async (req: any, res) => {
     try {
       const artistId = parseInt(req.params.id);
       const tips = await storage.getTipsByArtist(artistId);
@@ -905,7 +935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/tips/:id/thank', isAuthenticated, async (req: any, res) => {
+  app.post('/api/tips/:id/thank', requireAuth, async (req: any, res) => {
     try {
       const tipId = req.params.id;
       const { reactionType } = req.body;
@@ -919,7 +949,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Social Features - Artist Following
-  app.post('/api/artists/:id/follow', isAuthenticated, async (req: any, res) => {
+  app.post('/api/artists/:id/follow', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const artistId = parseInt(req.params.id);
@@ -932,7 +962,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/artists/:id/follow', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/artists/:id/follow', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const artistId = parseInt(req.params.id);
@@ -967,7 +997,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/artists/:id/is-following', isAuthenticated, async (req: any, res) => {
+  app.get('/api/artists/:id/is-following', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const artistId = parseInt(req.params.id);
@@ -981,7 +1011,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Social Features - Song Comments
-  app.post('/api/songs/:id/comments', isAuthenticated, async (req: any, res) => {
+  app.post('/api/songs/:id/comments', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const songId = req.params.id;
@@ -1011,7 +1041,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/comments/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/comments/:id', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const commentId = req.params.id;
@@ -1025,7 +1055,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Social Features - Comment Likes
-  app.post('/api/comments/:id/like', isAuthenticated, async (req: any, res) => {
+  app.post('/api/comments/:id/like', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const commentId = req.params.id;
@@ -1038,7 +1068,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/comments/:id/like', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/comments/:id/like', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const commentId = req.params.id;
@@ -1052,7 +1082,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Social Features - Song Reviews
-  app.post('/api/songs/:id/reviews', isAuthenticated, async (req: any, res) => {
+  app.post('/api/songs/:id/reviews', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const songId = req.params.id;
@@ -1082,7 +1112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/songs/:id/reviews/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/songs/:id/reviews/user', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const songId = req.params.id;
@@ -1095,7 +1125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/song-reviews/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/song-reviews/:id', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const reviewId = req.params.id;
@@ -1109,7 +1139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/song-reviews/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/song-reviews/:id', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const reviewId = req.params.id;
@@ -1123,7 +1153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Social Features - Artist Reviews
-  app.post('/api/artists/:id/reviews', isAuthenticated, async (req: any, res) => {
+  app.post('/api/artists/:id/reviews', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const artistId = parseInt(req.params.id);
@@ -1153,7 +1183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/artists/:id/reviews/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/artists/:id/reviews/user', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const artistId = parseInt(req.params.id);
@@ -1166,7 +1196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/artist-reviews/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/artist-reviews/:id', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const reviewId = req.params.id;
@@ -1180,7 +1210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/artist-reviews/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/artist-reviews/:id', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const reviewId = req.params.id;
@@ -1195,7 +1225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin routes - require admin role
   const requireAdmin = (req: any, res: any, next: any) => {
-    if (!req.isAuthenticated() || req.user?.claims?.sub !== 'admin') {
+    if (!req.requireAuth() || req.user?.claims?.sub !== 'admin') {
       return res.status(403).json({ message: "Admin access required" });
     }
     next();

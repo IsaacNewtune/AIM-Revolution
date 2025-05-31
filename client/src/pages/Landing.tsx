@@ -11,14 +11,8 @@ export default function Landing() {
     localStorage.setItem('selectedAccountType', type);
     setShowAccountModal(false);
     
-    // Route to appropriate sign-up page
-    if (type === 'artist') {
-      window.location.href = "/artist-signup";
-    } else if (type === 'manager') {
-      window.location.href = "/manager-signup";
-    } else {
-      window.location.href = "/signup";
-    }
+    // Route to authentication page where users can create accounts
+    window.location.href = "/auth";
   };
 
   return (
