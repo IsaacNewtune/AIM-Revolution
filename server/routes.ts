@@ -366,6 +366,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Artist analytics routes
+  app.get('/api/artists/:id/analytics', isAuthenticated, async (req: any, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      // Verify the artist belongs to this user
+      const artist = await storage.getArtistByUserId(userId);
+      if (!artist || artist.id !== artistId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const analytics = await storage.getArtistAnalytics(artistId);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching artist analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  app.get('/api/artists/:id/revenue-breakdown', isAuthenticated, async (req: any, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      // Verify the artist belongs to this user
+      const artist = await storage.getArtistByUserId(userId);
+      if (!artist || artist.id !== artistId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const breakdown = await storage.getArtistRevenueBreakdown(artistId);
+      res.json(breakdown);
+    } catch (error) {
+      console.error("Error fetching revenue breakdown:", error);
+      res.status(500).json({ message: "Failed to fetch revenue breakdown" });
+    }
+  });
+
   // Manager routes
   app.get('/api/manager/artists', isAuthenticated, async (req: any, res) => {
     try {

@@ -31,6 +31,13 @@ export interface IStorage {
   getArtistByUserId(userId: string): Promise<Artist | undefined>;
   createArtist(artist: InsertArtist): Promise<Artist>;
   updateArtistStats(artistId: number, stats: { totalStreams?: number; totalRevenue?: string; totalTips?: string; monthlyListeners?: number }): Promise<void>;
+  getArtistAnalytics(artistId: number): Promise<{
+    overview: { totalStreams: number; totalRevenue: string; totalTips: string; monthlyListeners: number };
+    recentStreams: Array<{ date: string; streams: number; revenue: string }>;
+    topSongs: Array<{ id: string; title: string; streams: number; revenue: string }>;
+    audienceInsights: { countries: Array<{ country: string; percentage: number }>; subscriptionTiers: Array<{ tier: string; percentage: number }> };
+  }>;
+  getArtistRevenueBreakdown(artistId: number): Promise<Array<{ source: string; amount: string; percentage: number }>>;
   
   // Song operations
   createSong(song: InsertSong): Promise<Song>;
@@ -100,6 +107,129 @@ export class DatabaseStorage implements IStorage {
 
   async updateArtistStats(artistId: number, stats: { totalStreams?: number; totalRevenue?: string; totalTips?: string; monthlyListeners?: number }): Promise<void> {
     await db.update(artists).set(stats).where(eq(artists.id, artistId));
+  }
+
+  async getArtistAnalytics(artistId: number): Promise<{
+    overview: { totalStreams: number; totalRevenue: string; totalTips: string; monthlyListeners: number };
+    recentStreams: Array<{ date: string; streams: number; revenue: string }>;
+    topSongs: Array<{ id: string; title: string; streams: number; revenue: string }>;
+    audienceInsights: { countries: Array<{ country: string; percentage: number }>; subscriptionTiers: Array<{ tier: string; percentage: number }> };
+  }> {
+    // Get artist overview
+    const [artist] = await db.select().from(artists).where(eq(artists.id, artistId));
+    
+    // Get recent streams data (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentStreams = await db
+      .select({
+        date: sql<string>`DATE(${streams.createdAt})`,
+        streams: sql<number>`COUNT(*)`,
+        revenue: sql<string>`SUM(CASE WHEN ${streams.isPaidUser} THEN 0.005 ELSE 0.001 END)`
+      })
+      .from(streams)
+      .innerJoin(songs, eq(streams.songId, songs.id))
+      .where(and(eq(songs.artistId, artistId), sql`${streams.createdAt} >= ${thirtyDaysAgo}`))
+      .groupBy(sql`DATE(${streams.createdAt})`)
+      .orderBy(sql`DATE(${streams.createdAt}) DESC`);
+
+    // Get top songs
+    const topSongs = await db
+      .select({
+        id: songs.id,
+        title: songs.title,
+        streams: sql<number>`COUNT(${streams.id})`,
+        revenue: sql<string>`SUM(CASE WHEN ${streams.isPaidUser} THEN 0.005 ELSE 0.001 END)`
+      })
+      .from(songs)
+      .leftJoin(streams, eq(songs.id, streams.songId))
+      .where(eq(songs.artistId, artistId))
+      .groupBy(songs.id, songs.title)
+      .orderBy(sql`COUNT(${streams.id}) DESC`)
+      .limit(10);
+
+    // Get audience insights - subscription tiers
+    const subscriptionTiers = await db
+      .select({
+        tier: users.subscriptionTier,
+        count: sql<number>`COUNT(*)`
+      })
+      .from(streams)
+      .innerJoin(songs, eq(streams.songId, songs.id))
+      .innerJoin(users, eq(streams.userId, users.id))
+      .where(eq(songs.artistId, artistId))
+      .groupBy(users.subscriptionTier);
+
+    const totalUserStreams = subscriptionTiers.reduce((sum, tier) => sum + tier.count, 0);
+    const tierPercentages = subscriptionTiers.map(tier => ({
+      tier: tier.tier || 'free',
+      percentage: totalUserStreams > 0 ? Math.round((tier.count / totalUserStreams) * 100) : 0
+    }));
+
+    return {
+      overview: {
+        totalStreams: artist?.totalStreams || 0,
+        totalRevenue: artist?.totalRevenue || "0.00",
+        totalTips: artist?.totalTips || "0.00",
+        monthlyListeners: artist?.monthlyListeners || 0
+      },
+      recentStreams: recentStreams.map(row => ({
+        date: row.date,
+        streams: row.streams,
+        revenue: row.revenue || "0.00"
+      })),
+      topSongs: topSongs.map(song => ({
+        id: song.id,
+        title: song.title,
+        streams: song.streams,
+        revenue: song.revenue || "0.00"
+      })),
+      audienceInsights: {
+        countries: [], // Will implement with location tracking
+        subscriptionTiers: tierPercentages
+      }
+    };
+  }
+
+  async getArtistRevenueBreakdown(artistId: number): Promise<Array<{ source: string; amount: string; percentage: number }>> {
+    // Get streaming revenue
+    const streamingRevenue = await db
+      .select({
+        amount: sql<string>`SUM(CASE WHEN ${streams.isPaidUser} THEN 0.005 ELSE 0.001 END)`
+      })
+      .from(streams)
+      .innerJoin(songs, eq(streams.songId, songs.id))
+      .where(eq(songs.artistId, artistId));
+
+    // Get tips revenue
+    const tipsRevenue = await db
+      .select({
+        amount: sql<string>`SUM(${tips.amount})`
+      })
+      .from(tips)
+      .where(eq(tips.toArtistId, artistId));
+
+    const streamAmount = parseFloat(streamingRevenue[0]?.amount || "0");
+    const tipAmount = parseFloat(tipsRevenue[0]?.amount || "0");
+    const totalRevenue = streamAmount + tipAmount;
+
+    if (totalRevenue === 0) {
+      return [];
+    }
+
+    return [
+      {
+        source: "Streaming",
+        amount: streamAmount.toFixed(2),
+        percentage: Math.round((streamAmount / totalRevenue) * 100)
+      },
+      {
+        source: "Tips",
+        amount: tipAmount.toFixed(2),
+        percentage: Math.round((tipAmount / totalRevenue) * 100)
+      }
+    ];
   }
 
   // Song operations
