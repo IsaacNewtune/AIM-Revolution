@@ -499,7 +499,25 @@ export class DatabaseStorage implements IStorage {
   async getArtistsByManager(managerId: string): Promise<(Artist & { revenueShare: string })[]> {
     const result = await db
       .select({
-        ...artists,
+        id: artists.id,
+        userId: artists.userId,
+        name: artists.name,
+        bio: artists.bio,
+        location: artists.location,
+        genre: artists.genre,
+        website: artists.website,
+        profileImageUrl: artists.profileImageUrl,
+        bannerImageUrl: artists.bannerImageUrl,
+        facebookHandle: artists.facebookHandle,
+        twitterHandle: artists.twitterHandle,
+        instagramHandle: artists.instagramHandle,
+        tiktokHandle: artists.tiktokHandle,
+        youtubeUrl: artists.youtubeUrl,
+        totalStreams: artists.totalStreams,
+        totalRevenue: artists.totalRevenue,
+        totalTips: artists.totalTips,
+        monthlyListeners: artists.monthlyListeners,
+        createdAt: artists.createdAt,
         revenueShare: managerArtists.revenueShare,
       })
       .from(managerArtists)

@@ -38,8 +38,8 @@ const upload = multer({
       } else {
         cb(new Error('Invalid audio file type'));
       }
-    } else if (file.fieldname === 'artwork') {
-      const allowedTypes = ['image/jpeg', 'image/png'];
+    } else if (file.fieldname === 'artwork' || file.fieldname === 'profileImage' || file.fieldname === 'bannerImage') {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
       if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
       } else {
