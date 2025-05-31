@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Traditional email/password authentication routes
   app.post('/api/auth/register', async (req, res) => {
     try {
-      const { firstName, lastName, email, password } = req.body;
+      const { firstName, lastName, email, password, accountType } = req.body;
 
       if (!firstName || !lastName || !email || !password) {
         return res.status(400).json({ message: "All fields are required" });
@@ -149,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email,
         firstName,
         lastName,
-        accountType: "listener", // Temporary, will be updated during onboarding
+        accountType: accountType || "listener",
         password: hashedPassword,
       });
 
