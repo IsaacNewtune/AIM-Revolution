@@ -209,11 +209,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Song routes
-  app.post('/api/songs/upload', isAuthenticated, upload.fields([
-    { name: 'audio', maxCount: 1 },
-    { name: 'artwork', maxCount: 1 }
-  ]), async (req: any, res) => {
+  // Song routes - Multiple song upload
+  app.post('/api/songs/upload', isAuthenticated, upload.any(), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const artist = await storage.getArtistByUserId(userId);
@@ -222,29 +219,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Artist profile not found" });
       }
 
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const audioFile = files.audio?.[0];
-      const artworkFile = files.artwork?.[0];
+      const files = req.files as Express.Multer.File[];
+      const metadata = JSON.parse(req.body.metadata);
+      
+      // Find cover art file
+      const coverArtFile = files.find(f => f.fieldname === 'coverArt');
+      const coverArtUrl = coverArtFile ? `/uploads/${coverArtFile.filename}` : null;
 
-      if (!audioFile) {
-        return res.status(400).json({ message: "Audio file is required" });
+      // Process each song
+      const uploadedSongs = [];
+      for (let i = 0; i < metadata.numberOfSongs; i++) {
+        const songFile = files.find(f => f.fieldname === `songFile_${i}`);
+        
+        if (!songFile) {
+          return res.status(400).json({ message: `Audio file missing for song ${i + 1}` });
+        }
+
+        const songMetadata = metadata.songs[i];
+        
+        const songData = insertSongSchema.parse({
+          artistId: artist.id,
+          title: songMetadata.title,
+          description: metadata.albumTitle ? `From album: ${metadata.albumTitle}` : null,
+          fileUrl: `/uploads/${songFile.filename}`,
+          coverArtUrl: coverArtUrl,
+          aiGenerationMethod: songMetadata.aiGenerator === 'Other' ? 'ai_assisted' : 
+                             songMetadata.aiGenerator.toLowerCase().includes('suno') ? 'fully_ai' :
+                             songMetadata.aiGenerator.toLowerCase().includes('udio') ? 'fully_ai' : 'ai_assisted',
+          isPublished: false, // Set to false initially for review
+        });
+
+        const song = await storage.createSong(songData);
+        uploadedSongs.push(song);
       }
 
-      const songData = insertSongSchema.parse({
-        artistId: artist.id,
-        title: req.body.title,
-        description: req.body.description,
-        fileUrl: `/uploads/${audioFile.filename}`,
-        coverArtUrl: artworkFile ? `/uploads/${artworkFile.filename}` : null,
-        aiGenerationMethod: req.body.aiGenerationMethod,
-        isPublished: true,
+      res.json({ 
+        message: "Songs uploaded successfully", 
+        songs: uploadedSongs,
+        albumTitle: metadata.albumTitle 
       });
-
-      const song = await storage.createSong(songData);
-      res.json(song);
     } catch (error) {
-      console.error("Error uploading song:", error);
-      res.status(400).json({ message: "Failed to upload song" });
+      console.error("Error uploading songs:", error);
+      res.status(400).json({ message: "Failed to upload songs" });
     }
   });
 

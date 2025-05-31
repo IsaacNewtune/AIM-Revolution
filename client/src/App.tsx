@@ -23,6 +23,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AccountTypeSelector from "@/pages/AccountTypeSelector";
 import CreateArtistProfile from "@/pages/CreateArtistProfile";
 import EditArtistProfile from "@/pages/EditArtistProfile";
+import SongUpload from "@/pages/SongUpload";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -71,6 +72,7 @@ function Router() {
           <Route path="/manager" component={ManagerDashboard} />
           <Route path="/manager/create-artist" component={CreateArtistProfile} />
           <Route path="/edit-artist/:id" component={EditArtistProfile} />
+          <Route path="/upload" component={SongUpload} />
           <Route path="/admin" component={AdminDashboard} />
         </>
       )}
