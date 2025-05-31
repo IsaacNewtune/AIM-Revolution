@@ -1,51 +1,26 @@
-import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import TipModal from "./TipModal";
+import { useState } from "react";
 
-interface MusicPlayerProps {
-  song: any;
-  onTip: (type: 'track' | 'artist', data: any) => void;
-}
+export default function MusicPlayer() {
+  const {
+    currentSong,
+    isPlaying,
+    currentTime,
+    duration,
+    volume,
+    togglePlay,
+    nextSong,
+    previousSong,
+    seekTo,
+    setVolume,
+  } = useMusicPlayer();
 
-export default function MusicPlayer({ song, onTip }: MusicPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(70);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [showTipModal, setShowTipModal] = useState(false);
 
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
-    }
-  }, [volume]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const updateTime = () => setCurrentTime(audio.currentTime);
-    const updateDuration = () => setDuration(audio.duration);
-
-    audio.addEventListener('timeupdate', updateTime);
-    audio.addEventListener('loadedmetadata', updateDuration);
-
-    return () => {
-      audio.removeEventListener('timeupdate', updateTime);
-      audio.removeEventListener('loadedmetadata', updateDuration);
-    };
-  }, [song]);
-
-  const togglePlay = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
+  if (!currentSong) return null;
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
@@ -54,30 +29,27 @@ export default function MusicPlayer({ song, onTip }: MusicPlayerProps) {
   };
 
   const handleSeek = (value: number[]) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = value[0];
-      setCurrentTime(value[0]);
-    }
+    seekTo(value[0]);
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card-bg border-t border-gray-800 p-4">
-      <audio ref={audioRef} src={song.fileUrl} />
+    <>
+      <div className="fixed bottom-0 left-0 right-0 bg-card-bg border-t border-gray-800 p-4 z-50">
       
       <div className="flex items-center justify-between max-w-full mx-auto">
         <div className="flex items-center space-x-4 flex-1">
           <img 
-            src={song.coverArtUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"} 
+            src={currentSong.coverArtUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"} 
             alt="Now Playing" 
             className="w-14 h-14 rounded object-cover" 
           />
           <div>
-            <h4 className="font-medium">{song.title}</h4>
+            <h4 className="font-medium">{currentSong.title}</h4>
             <p className="text-text-secondary text-sm">AI Artist</p>
           </div>
           <Button
             size="sm"
-            onClick={() => onTip('artist', song)}
+            onClick={() => setShowTipModal(true)}
             className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black text-xs rounded-full"
           >
             <i className="fas fa-coins"></i>
@@ -89,7 +61,7 @@ export default function MusicPlayer({ song, onTip }: MusicPlayerProps) {
             <Button variant="ghost" size="icon" className="text-text-secondary hover:text-white">
               <i className="fas fa-random"></i>
             </Button>
-            <Button variant="ghost" size="icon" className="text-text-secondary hover:text-white">
+            <Button variant="ghost" size="icon" onClick={previousSong} className="text-text-secondary hover:text-white">
               <i className="fas fa-step-backward"></i>
             </Button>
             <Button
@@ -99,7 +71,7 @@ export default function MusicPlayer({ song, onTip }: MusicPlayerProps) {
             >
               <i className={`fas fa-${isPlaying ? 'pause' : 'play'}`}></i>
             </Button>
-            <Button variant="ghost" size="icon" className="text-text-secondary hover:text-white">
+            <Button variant="ghost" size="icon" onClick={nextSong} className="text-text-secondary hover:text-white">
               <i className="fas fa-step-forward"></i>
             </Button>
             <Button variant="ghost" size="icon" className="text-text-secondary hover:text-white">
@@ -140,6 +112,16 @@ export default function MusicPlayer({ song, onTip }: MusicPlayerProps) {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+
+      {showTipModal && (
+        <TipModal
+          isOpen={showTipModal}
+          onClose={() => setShowTipModal(false)}
+          artistId={currentSong.artistId}
+          songId={currentSong.id}
+        />
+      )}
+    </>
   );
 }
