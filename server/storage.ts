@@ -60,6 +60,12 @@ export interface IStorage {
   // Playlist operations
   createPlaylist(playlist: InsertPlaylist): Promise<Playlist>;
   getPlaylistsByUser(userId: string): Promise<Playlist[]>;
+  getPlaylist(id: string): Promise<Playlist | undefined>;
+  updatePlaylist(id: string, data: Partial<InsertPlaylist>): Promise<Playlist>;
+  deletePlaylist(id: string): Promise<void>;
+  getPlaylistSongs(playlistId: string): Promise<any[]>;
+  addSongsToPlaylist(playlistId: string, songIds: string[]): Promise<void>;
+  removeSongFromPlaylist(playlistId: string, songId: string): Promise<void>;
   
   // Manager operations
   getArtistsByManager(managerId: string): Promise<(Artist & { revenueShare: string })[]>;
@@ -353,6 +359,67 @@ export class DatabaseStorage implements IStorage {
 
   async getPlaylistsByUser(userId: string): Promise<Playlist[]> {
     return await db.select().from(playlists).where(eq(playlists.userId, userId)).orderBy(desc(playlists.createdAt));
+  }
+
+  async getPlaylist(id: string): Promise<Playlist | undefined> {
+    const [playlist] = await db.select().from(playlists).where(eq(playlists.id, id));
+    return playlist;
+  }
+
+  async updatePlaylist(id: string, data: Partial<InsertPlaylist>): Promise<Playlist> {
+    const [playlist] = await db
+      .update(playlists)
+      .set(data)
+      .where(eq(playlists.id, id))
+      .returning();
+    return playlist;
+  }
+
+  async deletePlaylist(id: string): Promise<void> {
+    // First delete all playlist songs
+    await db.delete(playlistSongs).where(eq(playlistSongs.playlistId, id));
+    // Then delete the playlist
+    await db.delete(playlists).where(eq(playlists.id, id));
+  }
+
+  async getPlaylistSongs(playlistId: string): Promise<any[]> {
+    const result = await db
+      .select({
+        id: songs.id,
+        title: songs.title,
+        duration: songs.duration,
+        coverArtUrl: songs.coverArtUrl,
+        fileUrl: songs.fileUrl,
+        artistName: artists.name,
+        addedAt: playlistSongs.addedAt,
+      })
+      .from(playlistSongs)
+      .innerJoin(songs, eq(playlistSongs.songId, songs.id))
+      .innerJoin(artists, eq(songs.artistId, artists.id))
+      .where(eq(playlistSongs.playlistId, playlistId))
+      .orderBy(playlistSongs.addedAt);
+    
+    return result;
+  }
+
+  async addSongsToPlaylist(playlistId: string, songIds: string[]): Promise<void> {
+    const values = songIds.map(songId => ({
+      playlistId,
+      songId,
+    }));
+
+    await db.insert(playlistSongs).values(values);
+  }
+
+  async removeSongFromPlaylist(playlistId: string, songId: string): Promise<void> {
+    await db
+      .delete(playlistSongs)
+      .where(
+        and(
+          eq(playlistSongs.playlistId, playlistId),
+          eq(playlistSongs.songId, songId)
+        )
+      );
   }
 
   // Manager operations

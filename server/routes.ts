@@ -267,6 +267,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Playlist routes
+  app.get("/api/playlists", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playlists = await storage.getPlaylistsByUser(userId);
+      res.json(playlists);
+    } catch (error) {
+      console.error("Error fetching playlists:", error);
+      res.status(500).json({ message: "Failed to fetch playlists" });
+    }
+  });
+
+  app.get("/api/playlists/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const playlist = await storage.getPlaylist(id);
+      
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      // Check if playlist is public or user owns it
+      if (!playlist.isPublic && (!req.user || req.user.claims?.sub !== playlist.userId)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      res.json(playlist);
+    } catch (error) {
+      console.error("Error fetching playlist:", error);
+      res.status(500).json({ message: "Failed to fetch playlist" });
+    }
+  });
+
+  app.get("/api/playlists/:id/songs", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const playlist = await storage.getPlaylist(id);
+      
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      // Check if playlist is public or user owns it
+      if (!playlist.isPublic && (!req.user || req.user.claims?.sub !== playlist.userId)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const songs = await storage.getPlaylistSongs(id);
+      res.json(songs);
+    } catch (error) {
+      console.error("Error fetching playlist songs:", error);
+      res.status(500).json({ message: "Failed to fetch playlist songs" });
+    }
+  });
+
+  app.post("/api/playlists", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { title, description, isPublic } = req.body;
+
+      if (!title?.trim()) {
+        return res.status(400).json({ message: "Playlist title is required" });
+      }
+
+      const playlist = await storage.createPlaylist({
+        userId,
+        title: title.trim(),
+        description: description?.trim() || null,
+        isPublic: Boolean(isPublic)
+      });
+
+      res.status(201).json(playlist);
+    } catch (error) {
+      console.error("Error creating playlist:", error);
+      res.status(500).json({ message: "Failed to create playlist" });
+    }
+  });
+
+  app.put("/api/playlists/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      const { title, description, isPublic } = req.body;
+
+      const playlist = await storage.getPlaylist(id);
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (!title?.trim()) {
+        return res.status(400).json({ message: "Playlist title is required" });
+      }
+
+      const updatedPlaylist = await storage.updatePlaylist(id, {
+        title: title.trim(),
+        description: description?.trim() || null,
+        isPublic: Boolean(isPublic)
+      });
+
+      res.json(updatedPlaylist);
+    } catch (error) {
+      console.error("Error updating playlist:", error);
+      res.status(500).json({ message: "Failed to update playlist" });
+    }
+  });
+
+  app.delete("/api/playlists/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+
+      const playlist = await storage.getPlaylist(id);
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await storage.deletePlaylist(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting playlist:", error);
+      res.status(500).json({ message: "Failed to delete playlist" });
+    }
+  });
+
+  app.post("/api/playlists/:id/songs", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      const { songIds } = req.body;
+
+      const playlist = await storage.getPlaylist(id);
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (!Array.isArray(songIds) || songIds.length === 0) {
+        return res.status(400).json({ message: "Song IDs array is required" });
+      }
+
+      await storage.addSongsToPlaylist(id, songIds);
+      res.status(201).json({ message: "Songs added to playlist" });
+    } catch (error) {
+      console.error("Error adding songs to playlist:", error);
+      res.status(500).json({ message: "Failed to add songs to playlist" });
+    }
+  });
+
+  app.delete("/api/playlists/:id/songs/:songId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id, songId } = req.params;
+
+      const playlist = await storage.getPlaylist(id);
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await storage.removeSongFromPlaylist(id, songId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing song from playlist:", error);
+      res.status(500).json({ message: "Failed to remove song from playlist" });
+    }
+  });
+
   // Tip routes
   app.post('/api/tips', isAuthenticated, async (req: any, res) => {
     try {
