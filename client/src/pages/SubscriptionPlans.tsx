@@ -1,81 +1,146 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function SubscriptionPlans() {
   const [, setLocation] = useLocation();
-  const [selectedPlan, setSelectedPlan] = useState<'free' | 'artist' | 'manager'>('free');
+  const [selectedPlan, setSelectedPlan] = useState<string>('free');
+  const { user } = useAuth();
+  const [accountType, setAccountType] = useState<string>('listener');
 
-  const plans = [
-    {
-      id: 'free',
-      name: 'Listener - Free',
-      price: '$0',
-      period: '/month',
-      description: 'Basic music streaming for listeners',
-      features: [
-        'Limited streaming with ads',
-        'Basic playlist creation',
-        'Community features',
-        'Standard audio quality',
-        'Follow artists and leave reviews'
-      ],
-      buttonText: 'Start Free',
-      popular: false,
-      accountType: 'listener'
-    },
-    {
-      id: 'artist',
-      name: 'Artist Subscription',
-      price: '$5.99',
-      period: '/month',
-      description: 'Upload and monetize your AI music',
-      features: [
-        'Upload unlimited AI-generated music',
-        'Earn revenue from paid subscribers',
-        'Detailed analytics and insights',
-        'Fan engagement tools',
-        'Music distribution platform',
-        'Artist profile customization'
-      ],
-      buttonText: 'Subscribe as Artist',
-      popular: true,
-      accountType: 'artist'
-    },
-    {
-      id: 'manager',
-      name: 'Manager Subscription',
-      price: '$12.99',
-      period: '/month',
-      description: 'Manage multiple artists professionally',
-      features: [
-        'Manage multiple artists',
-        'Revenue sharing tools (15% default)',
-        'Analytics across all managed artists',
-        'Professional artist management dashboard',
-        'Bulk operations for multiple artists',
-        'Advanced reporting and insights',
-        'Priority support for managers'
-      ],
-      buttonText: 'Subscribe as Manager',
-      popular: false,
-      accountType: 'manager'
-    },
-  ];
+  useEffect(() => {
+    // Get account type from user data or URL params
+    if (user?.accountType) {
+      setAccountType(user.accountType);
+    }
+  }, [user]);
 
-  const handlePlanSelection = (planId: 'free' | 'artist' | 'manager') => {
+  const getPlansForAccountType = (type: string) => {
+    switch (type) {
+      case 'listener':
+        return [
+          {
+            id: 'free',
+            name: 'Free Listener',
+            price: '$0',
+            period: '/month',
+            description: 'Basic music streaming with ads',
+            features: [
+              'Stream music with ads',
+              'Basic playlist creation',
+              'Community features',
+              'Standard audio quality',
+              'Follow artists and leave reviews'
+            ],
+            buttonText: 'Start Free',
+            popular: false
+          },
+          {
+            id: 'premium',
+            name: 'Premium Listener',
+            price: '$4.99',
+            period: '/month',
+            description: 'Ad-free music streaming experience',
+            features: [
+              'Unlimited ad-free streaming',
+              'High-quality audio',
+              'Offline downloads',
+              'Advanced playlist features',
+              'Early access to new releases',
+              'Support artists with streams'
+            ],
+            buttonText: 'Go Premium',
+            popular: true
+          }
+        ];
+      case 'artist':
+        return [
+          {
+            id: 'artist',
+            name: 'Artist Subscription',
+            price: '$5.99',
+            period: '/month',
+            description: 'Upload and monetize your AI music',
+            features: [
+              'Upload unlimited AI-generated music',
+              'Earn revenue from paid subscribers',
+              'Detailed analytics and insights',
+              'Fan engagement tools',
+              'Music distribution platform',
+              'Artist profile customization'
+            ],
+            buttonText: 'Subscribe as Artist',
+            popular: true
+          }
+        ];
+      case 'manager':
+        return [
+          {
+            id: 'manager',
+            name: 'Manager Subscription',
+            price: '$12.99',
+            period: '/month',
+            description: 'Manage multiple artists professionally',
+            features: [
+              'Manage multiple artists',
+              'Revenue sharing tools (15% default)',
+              'Analytics across all managed artists',
+              'Professional artist management dashboard',
+              'Bulk operations for multiple artists',
+              'Advanced reporting and insights',
+              'Priority support for managers'
+            ],
+            buttonText: 'Subscribe as Manager',
+            popular: true
+          }
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const plans = getPlansForAccountType(accountType);
+
+  const handlePlanSelection = (planId: string) => {
     setSelectedPlan(planId);
     localStorage.setItem('selectedPlan', planId);
-    localStorage.setItem('selectedAccountType', planId === 'free' ? 'listener' : planId);
+    localStorage.setItem('selectedAccountType', accountType);
     
     if (planId === 'free') {
-      // Free plan - go directly to complete setup
-      window.location.href = "/api/login";
+      // Free plan - complete setup and go to dashboard
+      setLocation('/');
     } else {
       // Paid plans - go to payment processing
       setLocation('/payment-setup');
+    }
+  };
+
+  const getPageTitle = () => {
+    switch (accountType) {
+      case 'listener':
+        return 'Choose Your Listening Plan';
+      case 'artist':
+        return 'Artist Subscription';
+      case 'manager':
+        return 'Manager Subscription';
+      default:
+        return 'Choose Your Plan';
+    }
+  };
+
+  const getPageDescription = () => {
+    switch (accountType) {
+      case 'listener':
+        return 'Select the perfect plan to enjoy AI-generated music';
+      case 'artist':
+        return 'Start monetizing your AI-generated music today';
+      case 'manager':
+        return 'Manage multiple artists and grow their careers';
+      default:
+        return 'Select the perfect plan for your needs';
     }
   };
 
@@ -83,13 +148,17 @@ export default function SubscriptionPlans() {
     <div className="min-h-screen bg-dark-bg text-white p-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Choose Your Plan</h1>
+          <h1 className="text-4xl font-bold mb-4">{getPageTitle()}</h1>
           <p className="text-xl text-text-secondary max-w-2xl mx-auto">
-            Select the perfect plan to enjoy AI-generated music and support your favorite artists
+            {getPageDescription()}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className={`grid gap-8 ${
+          plans.length === 1 ? 'max-w-md mx-auto' : 
+          plans.length === 2 ? 'md:grid-cols-2 max-w-4xl mx-auto' : 
+          'md:grid-cols-3'
+        }`}>
           {plans.map((plan) => (
             <Card 
               key={plan.id}
