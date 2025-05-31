@@ -67,6 +67,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Account type selection endpoint
+  app.post('/api/auth/account-type', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { accountType } = req.body;
+
+      if (!accountType || !['listener', 'artist', 'manager'].includes(accountType)) {
+        return res.status(400).json({ message: "Valid account type is required" });
+      }
+
+      await storage.updateUserAccountType(userId, accountType);
+      const updatedUser = await storage.getUser(userId);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating account type:", error);
+      res.status(500).json({ message: "Failed to update account type" });
+    }
+  });
+
   app.put('/api/auth/user/account-type', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

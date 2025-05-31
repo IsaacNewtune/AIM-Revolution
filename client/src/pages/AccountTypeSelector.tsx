@@ -16,7 +16,7 @@ export default function AccountTypeSelector() {
 
   const updateAccountTypeMutation = useMutation({
     mutationFn: async (accountType: string) => {
-      await apiRequest('PUT', '/api/auth/user/account-type', { accountType });
+      await apiRequest('POST', '/api/auth/account-type', { accountType });
     },
     onSuccess: (_, accountType) => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
