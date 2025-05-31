@@ -763,6 +763,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/artists/:id/tips', isAuthenticated, async (req: any, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const tips = await storage.getTipsByArtist(artistId);
+      res.json(tips);
+    } catch (error) {
+      console.error("Error fetching tips:", error);
+      res.status(500).json({ message: "Failed to fetch tips" });
+    }
+  });
+
+  app.post('/api/tips/:id/thank', isAuthenticated, async (req: any, res) => {
+    try {
+      const tipId = req.params.id;
+      const { reactionType } = req.body;
+      
+      await storage.addTipReaction(tipId, reactionType);
+      res.json({ message: "Thank you sent successfully" });
+    } catch (error) {
+      console.error("Error sending thank you:", error);
+      res.status(500).json({ message: "Failed to send thank you" });
+    }
+  });
+
   // Social Features - Artist Following
   app.post('/api/artists/:id/follow', isAuthenticated, async (req: any, res) => {
     try {

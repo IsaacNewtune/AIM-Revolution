@@ -68,8 +68,9 @@ export interface IStorage {
   
   // Tip operations
   createTip(tip: InsertTip): Promise<Tip>;
-  getTipsByArtist(artistId: number): Promise<Tip[]>;
+  getTipsByArtist(artistId: number): Promise<Array<Tip & { user: { firstName: string | null; lastName: string | null; profileImageUrl: string | null } }>>;
   getTipsByUser(userId: string): Promise<Tip[]>;
+  addTipReaction(tipId: string, reactionType: 'thumbs_up' | 'heart'): Promise<void>;
   
   // Stream operations
   recordStream(userId: string | null, songId: string, isPaidUser: boolean, location?: string): Promise<Stream>;
