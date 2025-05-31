@@ -60,7 +60,7 @@ const sessionSettings: session.SessionOptions = {
   saveUninitialized: false,
   store: new (connectPg(session))({
     pool,
-    createTableIfMissing: true,
+    createTableIfMissing: false,
   }),
   cookie: {
     secure: false, // Set to true in production with HTTPS
