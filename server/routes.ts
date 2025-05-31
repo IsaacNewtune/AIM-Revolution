@@ -894,6 +894,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes - require admin role
+  const requireAdmin = (req: any, res: any, next: any) => {
+    if (!req.isAuthenticated() || req.user?.claims?.sub !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    next();
+  };
+
+  app.get('/api/admin/analytics', requireAdmin, async (req, res) => {
+    try {
+      const analytics = await storage.getPlatformAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching platform analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  app.get('/api/admin/users', requireAdmin, async (req, res) => {
+    try {
+      const { accountType, isActive, isSuspended, limit = 50, offset = 0 } = req.query;
+      const filters = {
+        accountType: accountType as string,
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+        isSuspended: isSuspended === 'true' ? true : isSuspended === 'false' ? false : undefined,
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string)
+      };
+      
+      const result = await storage.getAllUsers(filters);
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.put('/api/admin/users/:id/suspend', requireAdmin, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const { reason } = req.body;
+      
+      await storage.suspendUser(userId, reason);
+      res.json({ message: "User suspended successfully" });
+    } catch (error) {
+      console.error("Error suspending user:", error);
+      res.status(500).json({ message: "Failed to suspend user" });
+    }
+  });
+
+  app.put('/api/admin/users/:id/unsuspend', requireAdmin, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      
+      await storage.unsuspendUser(userId);
+      res.json({ message: "User unsuspended successfully" });
+    } catch (error) {
+      console.error("Error unsuspending user:", error);
+      res.status(500).json({ message: "Failed to unsuspend user" });
+    }
+  });
+
+  app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      
+      await storage.deleteUser(userId);
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  app.put('/api/admin/users/:id/account-type', requireAdmin, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const { accountType } = req.body;
+      
+      await storage.updateUserAccountType(userId, accountType);
+      res.json({ message: "Account type updated successfully" });
+    } catch (error) {
+      console.error("Error updating account type:", error);
+      res.status(500).json({ message: "Failed to update account type" });
+    }
+  });
+
+  app.get('/api/admin/moderation/queue', requireAdmin, async (req, res) => {
+    try {
+      const queue = await storage.getContentModerationQueue();
+      res.json(queue);
+    } catch (error) {
+      console.error("Error fetching moderation queue:", error);
+      res.status(500).json({ message: "Failed to fetch moderation queue" });
+    }
+  });
+
+  app.post('/api/admin/moderation/:type/:id/:action', requireAdmin, async (req, res) => {
+    try {
+      const { type, id, action } = req.params;
+      
+      await storage.moderateContent(type as 'song' | 'comment' | 'review', id, action as 'approve' | 'reject' | 'remove');
+      res.json({ message: "Content moderated successfully" });
+    } catch (error) {
+      console.error("Error moderating content:", error);
+      res.status(500).json({ message: "Failed to moderate content" });
+    }
+  });
+
   // Serve uploaded files
   app.use('/uploads', express.static('uploads'));
 
