@@ -27,6 +27,7 @@ import CreateArtistProfile from "@/pages/CreateArtistProfile";
 import EditArtistProfile from "@/pages/EditArtistProfile";
 import SongUpload from "@/pages/SongUpload";
 import NotFound from "@/pages/not-found";
+import AuthPage from "@/pages/AuthPage";
 
 function Router() {
   const { isAuthenticated, isLoading, user, error } = useAuth();
@@ -56,6 +57,7 @@ function Router() {
       {!isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
+          <Route path="/auth" component={AuthPage} />
           <Route path="/signup" component={SignUp} />
           <Route path="/artist-signup" component={ArtistSignUp} />
           <Route path="/manager-signup" component={ManagerSignUp} />

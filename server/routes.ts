@@ -109,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bcrypt = require('bcrypt');
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create user with temporary ID (we'll use email as ID for traditional auth)
+      // Create user with email-based ID for traditional auth
       const userId = email.replace(/[^a-zA-Z0-9]/g, '_') + '_' + Date.now();
       
       const user = await storage.upsertUser({
@@ -118,10 +118,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName,
         lastName,
         accountType: "listener", // Temporary, will be updated during onboarding
+        password: hashedPassword,
       });
-
-      // Store password separately (you'd need to add password storage to your schema)
-      // For now, we'll store it in a separate table or extend the user table
 
       // Create session
       req.login(user, (err: any) => {
@@ -129,7 +127,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Session creation error:", err);
           return res.status(500).json({ message: "Failed to create session" });
         }
-        res.status(201).json(user);
+        
+        // Remove password from response
+        const { password: _, ...userResponse } = user;
+        res.status(201).json(userResponse);
       });
 
     } catch (error) {
@@ -148,14 +149,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Find user by email
       const user = await storage.getUserByEmail(email);
-      if (!user) {
+      if (!user || !user.password) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
-      // Verify password (you'd need to implement password verification)
-      // For now, we'll implement a basic check
+      // Verify password
       const bcrypt = require('bcrypt');
-      // Note: You'd need to store passwords in your database
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
       
       // Create session
       req.login(user, (err: any) => {
@@ -163,7 +167,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Login session error:", err);
           return res.status(500).json({ message: "Login failed" });
         }
-        res.json(user);
+        
+        // Remove password from response
+        const { password: _, ...userResponse } = user;
+        res.json(userResponse);
       });
 
     } catch (error) {
