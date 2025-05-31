@@ -184,7 +184,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify password
-      const bcrypt = require('bcrypt');
       const isValidPassword = await bcrypt.compare(password, user.password);
       
       if (!isValidPassword) {
@@ -192,16 +191,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create session
-      req.login(user, (err: any) => {
-        if (err) {
-          console.error("Login session error:", err);
-          return res.status(500).json({ message: "Login failed" });
-        }
-        
-        // Remove password from response
-        const { password: _, ...userResponse } = user;
-        res.json(userResponse);
-      });
+      req.session.userId = user.id;
+      
+      // Remove password from response
+      const { password: _, ...userResponse } = user;
+      res.json(userResponse);
 
     } catch (error) {
       console.error("Login error:", error);
