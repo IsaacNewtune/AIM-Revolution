@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Sidebar from "@/components/Sidebar";
@@ -6,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function ManagerDashboard() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
 
   const { data: managedArtists = [] } = useQuery({
     queryKey: ['/api/manager/artists'],
@@ -31,7 +33,10 @@ export default function ManagerDashboard() {
       <div className="ml-64 p-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Management Dashboard</h1>
-          <Button className="px-4 py-2 bg-gradient-to-r from-ai-purple to-ai-blue text-white rounded-lg hover:shadow-lg transition-all">
+          <Button 
+            onClick={() => setLocation('/manager/create-artist')}
+            className="px-4 py-2 bg-gradient-to-r from-ai-purple to-ai-blue text-white rounded-lg hover:shadow-lg transition-all"
+          >
             <i className="fas fa-plus mr-2"></i>Add New Artist
           </Button>
         </div>

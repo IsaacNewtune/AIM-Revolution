@@ -151,6 +151,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Artist routes
+  app.post('/api/artists', isAuthenticated, upload.fields([
+    { name: 'profileImage', maxCount: 1 },
+    { name: 'bannerImage', maxCount: 1 }
+  ]), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.accountType !== 'manager') {
+        return res.status(403).json({ message: "Only managers can create artist profiles" });
+      }
+      
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const profileImagePath = files?.profileImage?.[0]?.path;
+      const bannerImagePath = files?.bannerImage?.[0]?.path;
+      
+      const artistData = {
+        name: req.body.name,
+        bio: req.body.bio || null,
+        location: req.body.location || null,
+        genre: req.body.genre || null,
+        website: req.body.website || null,
+        facebookHandle: req.body.facebookHandle || null,
+        twitterHandle: req.body.twitterHandle || null,
+        instagramHandle: req.body.instagramHandle || null,
+        tiktokHandle: req.body.tiktokHandle || null,
+        spotifyUrl: req.body.spotifyUrl || null,
+        soundcloudUrl: req.body.soundcloudUrl || null,
+        youtubeUrl: req.body.youtubeUrl || null,
+        profileImageUrl: profileImagePath || null,
+        bannerImageUrl: bannerImagePath || null,
+        userId: userId
+      };
+      
+      const artist = await storage.createArtist(artistData);
+      
+      // Add the artist to the manager's managed artists
+      await storage.addArtistToManager(userId, artist.id);
+      
+      res.json(artist);
+    } catch (error) {
+      console.error("Error creating artist:", error);
+      res.status(500).json({ message: "Failed to create artist" });
+    }
+  });
+
   app.get('/api/artist/profile', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
