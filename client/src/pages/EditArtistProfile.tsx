@@ -38,14 +38,15 @@ export default function EditArtistProfile() {
 
   // Fetch artist data
   const { data: artist, isLoading } = useQuery({
-    queryKey: ['/api/artists', artistId],
+    queryKey: [`/api/artists/${artistId}`],
     enabled: !!artistId,
   });
 
   // Populate form when artist data loads
   useEffect(() => {
+    console.log('Artist data received:', artist);
     if (artist) {
-      setFormData({
+      const newFormData = {
         name: artist.name || '',
         bio: artist.bio || '',
         location: artist.location || '',
@@ -56,7 +57,9 @@ export default function EditArtistProfile() {
         instagramHandle: artist.instagramHandle || '',
         tiktokHandle: artist.tiktokHandle || '',
         youtubeUrl: artist.youtubeUrl || ''
-      });
+      };
+      console.log('Setting form data:', newFormData);
+      setFormData(newFormData);
       
       if (artist.profileImageUrl) {
         setProfileImagePreview(artist.profileImageUrl);
