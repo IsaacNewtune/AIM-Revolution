@@ -60,6 +60,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User routes
+  app.post('/api/user/update-profile', isAuthenticated, upload.fields([
+    { name: 'profileImage', maxCount: 1 },
+    { name: 'headerImage', maxCount: 1 }
+  ]), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { firstName, lastName, bio, location } = req.body;
+      
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const profileImageFile = files.profileImage?.[0];
+      const headerImageFile = files.headerImage?.[0];
+
+      // Update user profile
+      await storage.upsertUser({
+        id: userId,
+        email: req.user.claims.email,
+        firstName,
+        lastName,
+        profileImageUrl: profileImageFile ? `/uploads/${profileImageFile.filename}` : req.user.claims.profile_image_url,
+        accountType: req.body.accountType || 'listener',
+      });
+
+      const updatedUser = await storage.getUser(userId);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(400).json({ message: "Failed to update profile" });
+    }
+  });
+
   app.post('/api/user/setup', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

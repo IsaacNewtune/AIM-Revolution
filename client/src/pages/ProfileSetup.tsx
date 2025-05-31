@@ -281,7 +281,7 @@ export default function ProfileSetup() {
             <CardContent>
               <div className="text-center mb-6">
                 <div className="text-3xl font-bold text-spotify-green mb-2">
-                  ${parseFloat(user?.creditBalance || '0').toFixed(2)}
+                  ${parseFloat((user as any)?.creditBalance || '0').toFixed(2)}
                 </div>
                 <p className="text-text-secondary text-sm">Available for tipping artists</p>
               </div>
@@ -322,9 +322,9 @@ export default function ProfileSetup() {
             <CardTitle>Transaction History</CardTitle>
           </CardHeader>
           <CardContent>
-            {transactions.length > 0 ? (
+            {(transactions as any[]).length > 0 ? (
               <div className="space-y-4">
-                {transactions.map((transaction: any) => (
+                {(transactions as any[]).map((transaction: any) => (
                   <div key={transaction.id} className="flex items-center justify-between p-4 bg-dark-bg rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
