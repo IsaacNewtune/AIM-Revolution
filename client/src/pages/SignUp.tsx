@@ -40,13 +40,9 @@ export default function SignUp() {
     // Store form data for the next step
     localStorage.setItem('signUpData', JSON.stringify(formData));
     
-    // For listeners, go to subscription selection
-    if (accountType === 'listener') {
-      setLocation('/subscription-plans');
-    } else {
-      // For artists and managers, complete setup first
-      window.location.href = "/api/login";
-    }
+    // All users need to authenticate first through Replit OAuth
+    // The account type selection happens after authentication
+    window.location.href = "/api/login";
   };
 
   const handleSocialSignUp = (provider: string) => {

@@ -29,9 +29,12 @@ import SongUpload from "@/pages/SongUpload";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, error } = useAuth();
 
-  if (isLoading) {
+  // If we have an authentication error (401), treat as not authenticated
+  const isUnauthenticated = error && error.message?.includes('401');
+
+  if (isLoading && !isUnauthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-dark-bg">
         <div className="animate-spin w-8 h-8 border-4 border-ai-purple border-t-transparent rounded-full" />
@@ -39,9 +42,9 @@ function Router() {
     );
   }
 
-  // If user is authenticated but still has default "listener" account type, 
+  // If user is authenticated but doesn't have an account type set, 
   // show account setup to let them choose their role
-  const needsAccountSetup = isAuthenticated && user && user.accountType === 'listener' && 
+  const needsAccountSetup = isAuthenticated && user && !user.accountType && 
     window.location.pathname !== '/account-setup';
 
   if (needsAccountSetup) {
