@@ -3,6 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import path from "path";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -138,7 +139,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash password
-      const bcrypt = require('bcrypt');
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Create user with email-based ID for traditional auth
