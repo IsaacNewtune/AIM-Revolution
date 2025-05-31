@@ -55,7 +55,7 @@ function Router() {
   }
 
   // If user is authenticated but has no account type set, show account setup
-  const needsAccountSetup = isAuthenticated && user && !user.accountType && 
+  const needsAccountSetup = isAuthenticated && user && !(user as any).accountType && 
     window.location.pathname !== '/account-setup';
 
   if (needsAccountSetup) {

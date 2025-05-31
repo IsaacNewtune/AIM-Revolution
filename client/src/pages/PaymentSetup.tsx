@@ -46,8 +46,16 @@ export default function PaymentSetup() {
   const handleSubmitPayment = () => {
     // In a real implementation, this would process the payment through Stripe
     // For now, we'll simulate success and proceed to dashboard
-    alert('Payment processing would happen here with Stripe integration');
-    window.location.href = "/api/login";
+    const accountType = localStorage.getItem('selectedAccountType');
+    
+    // Redirect to appropriate dashboard based on account type
+    if (accountType === 'artist') {
+      setLocation('/artist');
+    } else if (accountType === 'manager') {
+      setLocation('/manager');
+    } else {
+      setLocation('/');
+    }
   };
 
   return (
