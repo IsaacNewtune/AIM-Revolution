@@ -35,8 +35,8 @@ export default function AccountTypeSelector() {
       setTimeout(() => {
         // Route based on account type
         if (accountType === 'listener') {
-          // Listeners get free access, go directly to home
-          setLocation('/');
+          // Listeners go to profile setup to complete their account
+          setLocation('/profile-setup');
         } else {
           // For artist and manager accounts, redirect to subscription plans
           setLocation('/subscription-plans');
