@@ -5,6 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/Landing";
+import SignUp from "@/pages/SignUp";
+import SubscriptionPlans from "@/pages/SubscriptionPlans";
+import PaymentSetup from "@/pages/PaymentSetup";
+import ProfileSetup from "@/pages/ProfileSetup";
 import Home from "@/pages/Home";
 import ListenerDashboard from "@/pages/ListenerDashboard";
 import ArtistDashboard from "@/pages/ArtistDashboard";
@@ -25,10 +29,16 @@ function Router() {
   return (
     <Switch>
       {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
+        <>
+          <Route path="/" component={Landing} />
+          <Route path="/signup" component={SignUp} />
+          <Route path="/subscription-plans" component={SubscriptionPlans} />
+          <Route path="/payment-setup" component={PaymentSetup} />
+        </>
       ) : (
         <>
           <Route path="/" component={Home} />
+          <Route path="/profile-setup" component={ProfileSetup} />
           <Route path="/listener" component={ListenerDashboard} />
           <Route path="/artist" component={ArtistDashboard} />
           <Route path="/manager" component={ManagerDashboard} />

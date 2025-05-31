@@ -9,7 +9,8 @@ export default function Landing() {
   const selectAccountType = (type: string) => {
     // Store account type preference in localStorage for the setup flow
     localStorage.setItem('selectedAccountType', type);
-    window.location.href = "/api/login";
+    setShowAccountModal(false);
+    window.location.href = "/signup";
   };
 
   return (
