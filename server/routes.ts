@@ -100,7 +100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Account type selection endpoint
   app.post('/api/auth/account-type', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.session.userId;
       const { accountType } = req.body;
 
       if (!accountType || !['listener', 'artist', 'manager'].includes(accountType)) {
@@ -214,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/auth/user/account-type', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const { accountType } = req.body;
       
       if (!['listener', 'artist', 'manager'].includes(accountType)) {
@@ -236,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     { name: 'headerImage', maxCount: 1 }
   ]), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const { firstName, lastName, bio, location } = req.body;
       
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -246,10 +246,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user profile
       await storage.upsertUser({
         id: userId,
-        email: req.user.claims.email,
+        email: req.session.userId,
         firstName,
         lastName,
-        profileImageUrl: profileImageFile ? `/uploads/${profileImageFile.filename}` : req.user.claims.profile_image_url,
+        profileImageUrl: profileImageFile ? `/uploads/${profileImageFile.filename}` : req.session.userId,
         accountType: req.body.accountType || 'listener',
       });
 
@@ -263,16 +263,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/user/setup', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const { accountType, name, bio, location } = req.body;
 
       // Update user account type
       await storage.upsertUser({
         id: userId,
-        email: req.user.claims.email,
-        firstName: req.user.claims.first_name,
-        lastName: req.user.claims.last_name,
-        profileImageUrl: req.user.claims.profile_image_url,
+        email: req.session.userId,
+        firstName: req.session.userId,
+        lastName: req.session.userId,
+        profileImageUrl: req.session.userId,
         accountType,
       });
 
@@ -280,7 +280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (accountType === 'artist' || accountType === 'manager') {
         const artistData = insertArtistSchema.parse({
           userId,
-          name: name || `${req.user.claims.first_name || ''} ${req.user.claims.last_name || ''}`.trim(),
+          name: name || `${req.session.userId || ''} ${req.session.userId || ''}`.trim(),
           bio,
           location,
         });
@@ -301,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     { name: 'bannerImage', maxCount: 1 }
   ]), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const user = await storage.getUser(userId);
       
       if (!user || user.accountType !== 'manager') {
@@ -342,7 +342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/artist/profile', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const artist = await storage.getArtistByUserId(userId);
       if (!artist) {
         return res.status(404).json({ message: "Artist profile not found" });
@@ -357,7 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Song routes - Multiple song upload
   app.post('/api/songs/upload', requireAuth, upload.any(), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const artist = await storage.getArtistByUserId(userId);
       
       if (!artist) {
@@ -437,7 +437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/songs/recommendations', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const songs = await storage.getRecommendedSongs(userId);
       res.json(songs);
     } catch (error) {
@@ -473,7 +473,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stream routes
   app.post('/api/streams', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const { songId } = req.body;
       
       const user = await storage.getUser(userId);
@@ -489,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/streams/history', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const streams = await storage.getStreamsByUser(userId);
       res.json(streams);
     } catch (error) {
@@ -501,7 +501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Playlist routes
   app.get("/api/playlists", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const playlists = await storage.getPlaylistsByUser(userId);
       res.json(playlists);
     } catch (error) {
@@ -555,7 +555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/playlists", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const { title, description, isPublic } = req.body;
 
       if (!title?.trim()) {
@@ -578,7 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/playlists/:id", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const { id } = req.params;
       const { title, description, isPublic } = req.body;
 
@@ -610,7 +610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/playlists/:id", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const { id } = req.params;
 
       const playlist = await storage.getPlaylist(id);
@@ -632,7 +632,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/playlists/:id/songs", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const { id } = req.params;
       const { songIds } = req.body;
 
@@ -659,7 +659,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/playlists/:id/songs/:songId", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const { id, songId } = req.params;
 
       const playlist = await storage.getPlaylist(id);
@@ -682,7 +682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Tip routes
   app.post('/api/tips', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const tipData = insertTipSchema.parse({
         fromUserId: userId,
         ...req.body,
@@ -708,7 +708,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/tips/sent', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const tips = await storage.getTipsByUser(userId);
       res.json(tips);
     } catch (error) {
@@ -731,7 +731,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Credit routes
   app.post('/api/credits/purchase', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const { amount } = req.body;
       
       // In a real implementation, this would process payment through Stripe
@@ -753,7 +753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Playlist routes
   app.post('/api/playlists', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const playlistData = insertPlaylistSchema.parse({
         userId,
         ...req.body,
@@ -769,7 +769,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/playlists', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const playlists = await storage.getPlaylistsByUser(userId);
       res.json(playlists);
     } catch (error) {
@@ -782,7 +782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/artists/:id/analytics', requireAuth, async (req: any, res) => {
     try {
       const artistId = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       
       // Verify the artist belongs to this user
       const artist = await storage.getArtistByUserId(userId);
@@ -801,7 +801,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/artists/:id/revenue-breakdown', requireAuth, async (req: any, res) => {
     try {
       const artistId = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       
       // Verify the artist belongs to this user
       const artist = await storage.getArtistByUserId(userId);
@@ -820,7 +820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Manager routes
   app.get('/api/manager/artists', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const artists = await storage.getArtistsByManager(userId);
       res.json(artists);
     } catch (error) {
@@ -831,7 +831,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/manager/artists', requireAuth, async (req: any, res) => {
     try {
-      const managerId = req.user.claims.sub;
+      const managerId = req.session.userId;
       const { artistId, revenueShare } = req.body;
       
       const managerArtist = await storage.addArtistToManager(managerId, artistId, revenueShare);
@@ -951,7 +951,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Social Features - Artist Following
   app.post('/api/artists/:id/follow', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const artistId = parseInt(req.params.id);
       
       const follow = await storage.followArtist(userId, artistId);
@@ -964,7 +964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/artists/:id/follow', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const artistId = parseInt(req.params.id);
       
       await storage.unfollowArtist(userId, artistId);
@@ -999,7 +999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/artists/:id/is-following', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const artistId = parseInt(req.params.id);
       
       const isFollowing = await storage.isFollowingArtist(userId, artistId);
@@ -1013,7 +1013,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Social Features - Song Comments
   app.post('/api/songs/:id/comments', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const songId = req.params.id;
       
       const commentData = insertSongCommentSchema.parse({
@@ -1043,7 +1043,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/comments/:id', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const commentId = req.params.id;
       
       await storage.deleteSongComment(commentId, userId);
@@ -1057,7 +1057,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Social Features - Comment Likes
   app.post('/api/comments/:id/like', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const commentId = req.params.id;
       
       const like = await storage.likeSongComment(userId, commentId);
@@ -1070,7 +1070,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/comments/:id/like', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const commentId = req.params.id;
       
       await storage.unlikeSongComment(userId, commentId);
@@ -1084,7 +1084,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Social Features - Song Reviews
   app.post('/api/songs/:id/reviews', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const songId = req.params.id;
       
       const reviewData = insertSongReviewSchema.parse({
@@ -1114,7 +1114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/songs/:id/reviews/user', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const songId = req.params.id;
       
       const review = await storage.getUserSongReview(userId, songId);
@@ -1127,7 +1127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/song-reviews/:id', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const reviewId = req.params.id;
       const { rating, reviewText } = req.body;
       
@@ -1141,7 +1141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/song-reviews/:id', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const reviewId = req.params.id;
       
       await storage.deleteSongReview(reviewId, userId);
@@ -1155,7 +1155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Social Features - Artist Reviews
   app.post('/api/artists/:id/reviews', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const artistId = parseInt(req.params.id);
       
       const reviewData = insertArtistReviewSchema.parse({
@@ -1185,7 +1185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/artists/:id/reviews/user', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const artistId = parseInt(req.params.id);
       
       const review = await storage.getUserArtistReview(userId, artistId);
@@ -1198,7 +1198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/artist-reviews/:id', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const reviewId = req.params.id;
       const { rating, reviewText } = req.body;
       
@@ -1212,7 +1212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/artist-reviews/:id', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const reviewId = req.params.id;
       
       await storage.deleteArtistReview(reviewId, userId);
