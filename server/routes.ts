@@ -154,16 +154,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Create session
-      req.login(user, (err: any) => {
-        if (err) {
-          console.error("Session creation error:", err);
-          return res.status(500).json({ message: "Failed to create session" });
-        }
-        
-        // Remove password from response
-        const { password: _, ...userResponse } = user;
-        res.status(201).json(userResponse);
-      });
+      req.session.userId = user.id;
+      
+      // Remove password from response
+      const { password: _, ...userResponse } = user;
+      res.status(201).json(userResponse);
 
     } catch (error) {
       console.error("Registration error:", error);
