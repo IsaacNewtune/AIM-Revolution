@@ -10,7 +10,13 @@ export default function Landing() {
     // Store account type preference in localStorage for the setup flow
     localStorage.setItem('selectedAccountType', type);
     setShowAccountModal(false);
-    window.location.href = "/signup";
+    
+    // Route to appropriate sign-up page
+    if (type === 'artist') {
+      window.location.href = "/artist-signup";
+    } else {
+      window.location.href = "/signup";
+    }
   };
 
   return (
