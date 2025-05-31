@@ -44,9 +44,8 @@ export default function EditArtistProfile() {
 
   // Populate form when artist data loads
   useEffect(() => {
-    console.log('Artist data received:', artist);
     if (artist) {
-      const newFormData = {
+      setFormData({
         name: artist.name || '',
         bio: artist.bio || '',
         location: artist.location || '',
@@ -57,15 +56,13 @@ export default function EditArtistProfile() {
         instagramHandle: artist.instagramHandle || '',
         tiktokHandle: artist.tiktokHandle || '',
         youtubeUrl: artist.youtubeUrl || ''
-      };
-      console.log('Setting form data:', newFormData);
-      setFormData(newFormData);
+      });
       
       if (artist.profileImageUrl) {
-        setProfileImagePreview(artist.profileImageUrl);
+        setProfileImagePreview(`/${artist.profileImageUrl}`);
       }
       if (artist.bannerImageUrl) {
-        setBannerImagePreview(artist.bannerImageUrl);
+        setBannerImagePreview(`/${artist.bannerImageUrl}`);
       }
     }
   }, [artist]);
