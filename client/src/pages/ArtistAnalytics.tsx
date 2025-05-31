@@ -55,6 +55,8 @@ export default function ArtistAnalytics() {
 
   const overview = analytics?.overview || {
     totalStreams: 0,
+    paidStreams: 0,
+    freeStreams: 0,
     totalRevenue: "0.00",
     totalTips: "0.00",
     monthlyListeners: 0
@@ -71,7 +73,7 @@ export default function ArtistAnalytics() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
@@ -81,6 +83,32 @@ export default function ArtistAnalytics() {
             <div className="mt-2">
               <div className="text-2xl font-bold">{overview.totalStreams.toLocaleString()}</div>
               <div className="text-xs text-gray-500">All time</div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-2">
+              <DollarSign className="w-5 h-5 text-green-500" />
+              <span className="text-sm font-medium text-gray-600">Paid Streams</span>
+            </div>
+            <div className="mt-2">
+              <div className="text-2xl font-bold text-green-600">{overview.paidStreams.toLocaleString()}</div>
+              <div className="text-xs text-green-600">Revenue generating</div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-2">
+              <Eye className="w-5 h-5 text-gray-500" />
+              <span className="text-sm font-medium text-gray-600">Free Streams</span>
+            </div>
+            <div className="mt-2">
+              <div className="text-2xl font-bold text-gray-600">{overview.freeStreams.toLocaleString()}</div>
+              <div className="text-xs text-gray-500">No revenue</div>
             </div>
           </CardContent>
         </Card>
@@ -141,6 +169,10 @@ export default function ArtistAnalytics() {
                 <TrendingUp className="w-5 h-5 mr-2" />
                 Streaming Activity (Last 30 Days)
               </CardTitle>
+              <p className="text-sm text-gray-600 mt-2">
+                <span className="text-green-600 font-medium">Paid streams</span> generate revenue ($0.005 each), while{' '}
+                <span className="text-gray-600 font-medium">free streams</span> provide exposure only.
+              </p>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
@@ -150,7 +182,9 @@ export default function ArtistAnalytics() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="streams" stroke="#8884d8" strokeWidth={2} />
+                  <Line type="monotone" dataKey="paidStreams" stroke="#10b981" strokeWidth={2} name="Paid Streams (Revenue)" />
+                  <Line type="monotone" dataKey="freeStreams" stroke="#6b7280" strokeWidth={2} name="Free Streams (Exposure)" />
+                  <Line type="monotone" dataKey="totalStreams" stroke="#8884d8" strokeWidth={2} name="Total Streams" />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -214,7 +248,8 @@ export default function ArtistAnalytics() {
         <TabsContent value="songs" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Top Performing Songs</CardTitle>
+              <CardTitle>Top Performing Songs - Paid vs Free Streams</CardTitle>
+              <p className="text-sm text-gray-600">Only paid streams (green bars) generate revenue for artists.</p>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
@@ -224,7 +259,8 @@ export default function ArtistAnalytics() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="streams" fill="#8884d8" />
+                  <Bar dataKey="paidStreams" stackId="a" fill="#10b981" name="Paid Streams (Revenue)" />
+                  <Bar dataKey="freeStreams" stackId="a" fill="#6b7280" name="Free Streams (Exposure)" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -242,12 +278,16 @@ export default function ArtistAnalytics() {
                       <Badge variant="outline">#{index + 1}</Badge>
                       <div>
                         <h4 className="font-semibold">{song.title}</h4>
-                        <p className="text-sm text-gray-600">{song.streams} streams</p>
+                        <div className="flex items-center space-x-4 text-sm">
+                          <span className="text-green-600 font-medium">{song.paidStreams} paid</span>
+                          <span className="text-gray-500">{song.freeStreams} free</span>
+                          <span className="text-blue-600">{song.totalStreams} total</span>
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">${song.revenue}</div>
-                      <div className="text-sm text-gray-500">Revenue</div>
+                      <div className="font-semibold text-green-600">${song.revenue}</div>
+                      <div className="text-sm text-gray-500">Revenue from paid streams</div>
                     </div>
                   </div>
                 )) || (

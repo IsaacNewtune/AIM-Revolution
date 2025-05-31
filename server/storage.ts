@@ -110,23 +110,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getArtistAnalytics(artistId: number): Promise<{
-    overview: { totalStreams: number; totalRevenue: string; totalTips: string; monthlyListeners: number };
-    recentStreams: Array<{ date: string; streams: number; revenue: string }>;
-    topSongs: Array<{ id: string; title: string; streams: number; revenue: string }>;
+    overview: { totalStreams: number; paidStreams: number; freeStreams: number; totalRevenue: string; totalTips: string; monthlyListeners: number };
+    recentStreams: Array<{ date: string; totalStreams: number; paidStreams: number; freeStreams: number; revenue: string }>;
+    topSongs: Array<{ id: string; title: string; totalStreams: number; paidStreams: number; freeStreams: number; revenue: string }>;
     audienceInsights: { countries: Array<{ country: string; percentage: number }>; subscriptionTiers: Array<{ tier: string; percentage: number }> };
   }> {
     // Get artist overview
     const [artist] = await db.select().from(artists).where(eq(artists.id, artistId));
     
-    // Get recent streams data (last 30 days)
+    // Get recent streams data (last 30 days) - separate paid vs free
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     const recentStreams = await db
       .select({
         date: sql<string>`DATE(${streams.createdAt})`,
-        streams: sql<number>`COUNT(*)`,
-        revenue: sql<string>`SUM(CASE WHEN ${streams.isPaidUser} THEN 0.005 ELSE 0.001 END)`
+        totalStreams: sql<number>`COUNT(*)`,
+        paidStreams: sql<number>`COUNT(CASE WHEN ${streams.isPaidUser} THEN 1 END)`,
+        freeStreams: sql<number>`COUNT(CASE WHEN NOT ${streams.isPaidUser} THEN 1 END)`,
+        revenue: sql<string>`SUM(CASE WHEN ${streams.isPaidUser} THEN 0.005 ELSE 0 END)`
       })
       .from(streams)
       .innerJoin(songs, eq(streams.songId, songs.id))
@@ -134,13 +136,15 @@ export class DatabaseStorage implements IStorage {
       .groupBy(sql`DATE(${streams.createdAt})`)
       .orderBy(sql`DATE(${streams.createdAt}) DESC`);
 
-    // Get top songs
+    // Get top songs with paid vs free streams breakdown
     const topSongs = await db
       .select({
         id: songs.id,
         title: songs.title,
-        streams: sql<number>`COUNT(${streams.id})`,
-        revenue: sql<string>`SUM(CASE WHEN ${streams.isPaidUser} THEN 0.005 ELSE 0.001 END)`
+        totalStreams: sql<number>`COUNT(${streams.id})`,
+        paidStreams: sql<number>`COUNT(CASE WHEN ${streams.isPaidUser} THEN 1 END)`,
+        freeStreams: sql<number>`COUNT(CASE WHEN NOT ${streams.isPaidUser} THEN 1 END)`,
+        revenue: sql<string>`SUM(CASE WHEN ${streams.isPaidUser} THEN 0.005 ELSE 0 END)`
       })
       .from(songs)
       .leftJoin(streams, eq(songs.id, streams.songId))
@@ -167,22 +171,41 @@ export class DatabaseStorage implements IStorage {
       percentage: totalUserStreams > 0 ? Math.round((tier.count / totalUserStreams) * 100) : 0
     }));
 
+    // Calculate total paid and free streams for overview
+    const allStreamStats = await db
+      .select({
+        totalStreams: sql<number>`COUNT(*)`,
+        paidStreams: sql<number>`COUNT(CASE WHEN ${streams.isPaidUser} THEN 1 END)`,
+        freeStreams: sql<number>`COUNT(CASE WHEN NOT ${streams.isPaidUser} THEN 1 END)`
+      })
+      .from(streams)
+      .innerJoin(songs, eq(streams.songId, songs.id))
+      .where(eq(songs.artistId, artistId));
+
+    const streamStats = allStreamStats[0] || { totalStreams: 0, paidStreams: 0, freeStreams: 0 };
+
     return {
       overview: {
-        totalStreams: artist?.totalStreams || 0,
+        totalStreams: streamStats.totalStreams,
+        paidStreams: streamStats.paidStreams,
+        freeStreams: streamStats.freeStreams,
         totalRevenue: artist?.totalRevenue || "0.00",
         totalTips: artist?.totalTips || "0.00",
         monthlyListeners: artist?.monthlyListeners || 0
       },
       recentStreams: recentStreams.map(row => ({
         date: row.date,
-        streams: row.streams,
+        totalStreams: row.totalStreams,
+        paidStreams: row.paidStreams,
+        freeStreams: row.freeStreams,
         revenue: row.revenue || "0.00"
       })),
       topSongs: topSongs.map(song => ({
         id: song.id,
         title: song.title,
-        streams: song.streams,
+        totalStreams: song.totalStreams,
+        paidStreams: song.paidStreams,
+        freeStreams: song.freeStreams,
         revenue: song.revenue || "0.00"
       })),
       audienceInsights: {
