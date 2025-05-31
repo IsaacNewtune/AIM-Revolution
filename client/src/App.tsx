@@ -63,6 +63,7 @@ function Router() {
           <Route path="/profile-setup" component={ProfileSetup} />
           <Route path="/discover" component={Discover} />
           <Route path="/analytics" component={ArtistAnalytics} />
+          <Route path="/artist-analytics/:id" component={ArtistAnalytics} />
           <Route path="/playlists" component={Playlists} />
           <Route path="/playlist/:id" component={PlaylistDetail} />
           <Route path="/listener" component={ListenerDashboard} />

@@ -126,7 +126,12 @@ export default function ManagerDashboard() {
                     <span className="text-spotify-green text-sm">+15.3%</span>
                   </div>
                   <div className="col-span-2">
-                    <Button variant="ghost" size="icon" className="text-ai-purple hover:text-purple-400 mr-2">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-ai-purple hover:text-purple-400 mr-2"
+                      onClick={() => window.location.href = `/artist-analytics/${artist.id}`}
+                    >
                       <i className="fas fa-chart-line"></i>
                     </Button>
                     <Button 

@@ -740,6 +740,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Artist Analytics endpoints
+  app.get('/api/artists/:id/analytics', isAuthenticated, async (req: any, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const analytics = await storage.getArtistAnalytics(artistId);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching artist analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  app.get('/api/artists/:id/revenue-breakdown', isAuthenticated, async (req: any, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const revenueBreakdown = await storage.getArtistRevenueBreakdown(artistId);
+      res.json(revenueBreakdown);
+    } catch (error) {
+      console.error("Error fetching revenue breakdown:", error);
+      res.status(500).json({ message: "Failed to fetch revenue breakdown" });
+    }
+  });
+
   // Social Features - Artist Following
   app.post('/api/artists/:id/follow', isAuthenticated, async (req: any, res) => {
     try {
