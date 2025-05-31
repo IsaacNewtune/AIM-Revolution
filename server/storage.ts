@@ -120,6 +120,35 @@ export interface IStorage {
   updateArtistReview(reviewId: string, userId: string, data: { rating: number; reviewText?: string }): Promise<ArtistReview>;
   deleteSongReview(reviewId: string, userId: string): Promise<void>;
   deleteArtistReview(reviewId: string, userId: string): Promise<void>;
+  
+  // Admin operations
+  getAllUsers(filters?: { accountType?: string; isActive?: boolean; isSuspended?: boolean; limit?: number; offset?: number }): Promise<{ users: User[]; total: number }>;
+  suspendUser(userId: string, reason: string): Promise<void>;
+  unsuspendUser(userId: string): Promise<void>;
+  deleteUser(userId: string): Promise<void>;
+  updateUserAccountType(userId: string, accountType: string): Promise<void>;
+  getPlatformAnalytics(): Promise<{
+    totalUsers: number;
+    totalArtists: number;
+    totalSongs: number;
+    totalStreams: number;
+    totalRevenue: string;
+    newUsersToday: number;
+    newUsersThisWeek: number;
+    newUsersThisMonth: number;
+    activeUsersToday: number;
+    topArtistsByStreams: Array<{ id: number; name: string; streams: number }>;
+    topSongsByStreams: Array<{ id: string; title: string; artistName: string; streams: number }>;
+    revenueByMonth: Array<{ month: string; revenue: string }>;
+  }>;
+  getContentModerationQueue(): Promise<Array<{
+    type: 'song' | 'comment' | 'review';
+    id: string;
+    content: any;
+    reportCount: number;
+    createdAt: Date;
+  }>>;
+  moderateContent(contentType: 'song' | 'comment' | 'review', contentId: string, action: 'approve' | 'reject' | 'remove'): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -747,6 +776,284 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(artistReviews)
       .where(and(eq(artistReviews.id, reviewId), eq(artistReviews.userId, userId)));
+  }
+
+  // Admin operations
+  async getAllUsers(filters?: { accountType?: string; isActive?: boolean; isSuspended?: boolean; limit?: number; offset?: number }): Promise<{ users: User[]; total: number }> {
+    const conditions = [];
+    
+    if (filters?.accountType) {
+      conditions.push(eq(users.accountType, filters.accountType));
+    }
+    if (filters?.isActive !== undefined) {
+      conditions.push(eq(users.isActive, filters.isActive));
+    }
+    if (filters?.isSuspended !== undefined) {
+      conditions.push(eq(users.isSuspended, filters.isSuspended));
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    
+    const [userResults, totalResults] = await Promise.all([
+      db.select()
+        .from(users)
+        .where(whereClause)
+        .limit(filters?.limit || 50)
+        .offset(filters?.offset || 0)
+        .orderBy(desc(users.createdAt)),
+      db.select({ count: count() })
+        .from(users)
+        .where(whereClause)
+    ]);
+
+    return {
+      users: userResults,
+      total: totalResults[0].count
+    };
+  }
+
+  async suspendUser(userId: string, reason: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        isSuspended: true,
+        suspensionReason: reason,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async unsuspendUser(userId: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        isSuspended: false,
+        suspensionReason: null,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    // Delete user and all related data
+    await db.transaction(async (tx) => {
+      // Delete user's streams
+      await tx.delete(streams).where(eq(streams.userId, userId));
+      
+      // Delete user's tips
+      await tx.delete(tips).where(eq(tips.userId, userId));
+      
+      // Delete user's comments
+      await tx.delete(songComments).where(eq(songComments.userId, userId));
+      
+      // Delete user's reviews
+      await tx.delete(songReviews).where(eq(songReviews.userId, userId));
+      await tx.delete(artistReviews).where(eq(artistReviews.userId, userId));
+      
+      // Delete user's playlists
+      await tx.delete(playlists).where(eq(playlists.userId, userId));
+      
+      // Delete user's follows
+      await tx.delete(artistFollows).where(eq(artistFollows.userId, userId));
+      
+      // Delete user's comment likes
+      await tx.delete(commentLikes).where(eq(commentLikes.userId, userId));
+      
+      // If user is an artist, delete their songs
+      const artist = await tx.select().from(artists).where(eq(artists.userId, userId));
+      if (artist.length > 0) {
+        await tx.delete(songs).where(eq(songs.artistId, artist[0].id));
+        await tx.delete(artists).where(eq(artists.userId, userId));
+      }
+      
+      // Finally delete the user
+      await tx.delete(users).where(eq(users.id, userId));
+    });
+  }
+
+  async updateUserAccountType(userId: string, accountType: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        accountType: accountType as any,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async getPlatformAnalytics(): Promise<{
+    totalUsers: number;
+    totalArtists: number;
+    totalSongs: number;
+    totalStreams: number;
+    totalRevenue: string;
+    newUsersToday: number;
+    newUsersThisWeek: number;
+    newUsersThisMonth: number;
+    activeUsersToday: number;
+    topArtistsByStreams: Array<{ id: number; name: string; streams: number }>;
+    topSongsByStreams: Array<{ id: string; title: string; artistName: string; streams: number }>;
+    revenueByMonth: Array<{ month: string; revenue: string }>;
+  }> {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalUsersResult,
+      totalArtistsResult,
+      totalSongsResult,
+      totalStreamsResult,
+      totalRevenueResult,
+      newUsersTodayResult,
+      newUsersWeekResult,
+      newUsersMonthResult,
+      activeUsersTodayResult,
+      topArtistsResult,
+      topSongsResult
+    ] = await Promise.all([
+      db.select({ count: count() }).from(users),
+      db.select({ count: count() }).from(artists),
+      db.select({ count: count() }).from(songs),
+      db.select({ count: count() }).from(streams),
+      db.select({ total: sum(streams.revenue) }).from(streams).where(isNotNull(streams.revenue)),
+      db.select({ count: count() }).from(users).where(gte(users.createdAt, today)),
+      db.select({ count: count() }).from(users).where(gte(users.createdAt, weekAgo)),
+      db.select({ count: count() }).from(users).where(gte(users.createdAt, monthAgo)),
+      db.select({ count: count() }).from(streams).where(gte(streams.streamedAt, today)),
+      db.select({
+        id: artists.id,
+        name: artists.name,
+        streams: count(streams.id)
+      })
+        .from(artists)
+        .leftJoin(songs, eq(songs.artistId, artists.id))
+        .leftJoin(streams, eq(streams.songId, songs.id))
+        .groupBy(artists.id, artists.name)
+        .orderBy(desc(count(streams.id)))
+        .limit(5),
+      db.select({
+        id: songs.id,
+        title: songs.title,
+        artistName: artists.name,
+        streams: count(streams.id)
+      })
+        .from(songs)
+        .leftJoin(artists, eq(artists.id, songs.artistId))
+        .leftJoin(streams, eq(streams.songId, songs.id))
+        .groupBy(songs.id, songs.title, artists.name)
+        .orderBy(desc(count(streams.id)))
+        .limit(10)
+    ]);
+
+    // Calculate revenue by month for the last 6 months
+    const revenueByMonth = [];
+    for (let i = 5; i >= 0; i--) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+      
+      const monthRevenueResult = await db
+        .select({ total: sum(streams.revenue) })
+        .from(streams)
+        .where(
+          and(
+            gte(streams.streamedAt, monthStart),
+            lte(streams.streamedAt, monthEnd),
+            isNotNull(streams.revenue)
+          )
+        );
+
+      revenueByMonth.push({
+        month: monthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        revenue: monthRevenueResult[0].total || '0.00'
+      });
+    }
+
+    return {
+      totalUsers: totalUsersResult[0].count,
+      totalArtists: totalArtistsResult[0].count,
+      totalSongs: totalSongsResult[0].count,
+      totalStreams: totalStreamsResult[0].count,
+      totalRevenue: totalRevenueResult[0].total || '0.00',
+      newUsersToday: newUsersTodayResult[0].count,
+      newUsersThisWeek: newUsersWeekResult[0].count,
+      newUsersThisMonth: newUsersMonthResult[0].count,
+      activeUsersToday: activeUsersTodayResult[0].count,
+      topArtistsByStreams: topArtistsResult,
+      topSongsByStreams: topSongsResult,
+      revenueByMonth
+    };
+  }
+
+  async getContentModerationQueue(): Promise<Array<{
+    type: 'song' | 'comment' | 'review';
+    id: string;
+    content: any;
+    reportCount: number;
+    createdAt: Date;
+  }>> {
+    // For now, return songs, comments, and reviews that might need moderation
+    const [suspiciousSongs, recentComments, recentReviews] = await Promise.all([
+      db.select({
+        type: sql<'song'>`'song'`,
+        id: songs.id,
+        content: songs,
+        reportCount: sql<number>`0`,
+        createdAt: songs.createdAt
+      })
+        .from(songs)
+        .where(
+          or(
+            like(songs.title, '%explicit%'),
+            like(songs.genre, '%inappropriate%')
+          )
+        )
+        .limit(10),
+      
+      db.select({
+        type: sql<'comment'>`'comment'`,
+        id: songComments.id,
+        content: songComments,
+        reportCount: sql<number>`0`,
+        createdAt: songComments.createdAt
+      })
+        .from(songComments)
+        .orderBy(desc(songComments.createdAt))
+        .limit(10),
+        
+      db.select({
+        type: sql<'review'>`'review'`,
+        id: songReviews.id,
+        content: songReviews,
+        reportCount: sql<number>`0`,
+        createdAt: songReviews.createdAt
+      })
+        .from(songReviews)
+        .where(lte(songReviews.rating, 2))
+        .orderBy(desc(songReviews.createdAt))
+        .limit(10)
+    ]);
+
+    return [...suspiciousSongs, ...recentComments, ...recentReviews]
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async moderateContent(contentType: 'song' | 'comment' | 'review', contentId: string, action: 'approve' | 'reject' | 'remove'): Promise<void> {
+    if (action === 'remove') {
+      switch (contentType) {
+        case 'song':
+          await db.delete(songs).where(eq(songs.id, contentId));
+          break;
+        case 'comment':
+          await db.delete(songComments).where(eq(songComments.id, contentId));
+          break;
+        case 'review':
+          await db.delete(songReviews).where(eq(songReviews.id, contentId));
+          break;
+      }
+    }
+    // For approve/reject, in a real app you'd update a moderation status field
   }
 }
 
