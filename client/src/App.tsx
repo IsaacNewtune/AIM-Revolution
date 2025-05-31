@@ -17,6 +17,8 @@ import Discover from "@/pages/Discover";
 import ArtistAnalytics from "@/pages/ArtistAnalytics";
 import ArtistSignUp from "@/pages/ArtistSignUp";
 import ManagerSignUp from "@/pages/ManagerSignUp";
+import Playlists from "@/pages/Playlists";
+import PlaylistDetail from "@/pages/PlaylistDetail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -47,6 +49,8 @@ function Router() {
           <Route path="/profile-setup" component={ProfileSetup} />
           <Route path="/discover" component={Discover} />
           <Route path="/analytics" component={ArtistAnalytics} />
+          <Route path="/playlists" component={Playlists} />
+          <Route path="/playlist/:id" component={PlaylistDetail} />
           <Route path="/listener" component={ListenerDashboard} />
           <Route path="/artist" component={ArtistDashboard} />
           <Route path="/manager" component={ManagerDashboard} />

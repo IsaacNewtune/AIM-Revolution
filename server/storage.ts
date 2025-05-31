@@ -5,6 +5,7 @@ import {
   tips,
   streams,
   playlists,
+  playlistSongs,
   managerArtists,
   type User,
   type UpsertUser,
