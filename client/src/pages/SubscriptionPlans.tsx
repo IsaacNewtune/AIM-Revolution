@@ -6,65 +6,69 @@ import { useLocation } from "wouter";
 
 export default function SubscriptionPlans() {
   const [, setLocation] = useLocation();
-  const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium' | 'pro'>('free');
+  const [selectedPlan, setSelectedPlan] = useState<'free' | 'artist' | 'manager'>('free');
 
   const plans = [
     {
       id: 'free',
-      name: 'Free Tier',
+      name: 'Listener - Free',
       price: '$0',
       period: '/month',
-      description: 'Get started with AI music',
+      description: 'Basic music streaming for listeners',
       features: [
         'Limited streaming with ads',
         'Basic playlist creation',
         'Community features',
         'Standard audio quality',
-        'No offline listening'
+        'Follow artists and leave reviews'
       ],
       buttonText: 'Start Free',
       popular: false,
+      accountType: 'listener'
     },
     {
-      id: 'premium',
-      name: 'Premium',
-      price: '$9.99',
+      id: 'artist',
+      name: 'Artist Subscription',
+      price: '$5.99',
       period: '/month',
-      description: 'Enhanced listening experience',
+      description: 'Upload and monetize your AI music',
       features: [
-        'Unlimited ad-free streaming',
-        'High-quality audio (320kbps)',
-        'Offline downloads',
-        'Advanced playlist features',
-        'Artist tipping system',
-        'Priority customer support'
+        'Upload unlimited AI-generated music',
+        'Earn revenue from paid subscribers',
+        'Detailed analytics and insights',
+        'Fan engagement tools',
+        'Music distribution platform',
+        'Artist profile customization'
       ],
-      buttonText: 'Choose Premium',
+      buttonText: 'Subscribe as Artist',
       popular: true,
+      accountType: 'artist'
     },
     {
-      id: 'pro',
-      name: 'Pro',
-      price: '$19.99',
+      id: 'manager',
+      name: 'Manager Subscription',
+      price: '$12.99',
       period: '/month',
-      description: 'Ultimate AI music experience',
+      description: 'Manage multiple artists professionally',
       features: [
-        'Everything in Premium',
-        'Lossless audio quality',
-        'Exclusive early access to new AI tracks',
-        'Enhanced tipping credits ($5/month)',
-        'Advanced analytics on listening habits',
-        'Direct artist communication',
-        'VIP community access'
+        'Manage multiple artists',
+        'Revenue sharing tools (15% default)',
+        'Analytics across all managed artists',
+        'Professional artist management dashboard',
+        'Bulk operations for multiple artists',
+        'Advanced reporting and insights',
+        'Priority support for managers'
       ],
-      buttonText: 'Go Pro',
+      buttonText: 'Subscribe as Manager',
       popular: false,
+      accountType: 'manager'
     },
   ];
 
-  const handlePlanSelection = (planId: 'free' | 'premium' | 'pro') => {
+  const handlePlanSelection = (planId: 'free' | 'artist' | 'manager') => {
     setSelectedPlan(planId);
     localStorage.setItem('selectedPlan', planId);
+    localStorage.setItem('selectedAccountType', planId === 'free' ? 'listener' : planId);
     
     if (planId === 'free') {
       // Free plan - go directly to complete setup
