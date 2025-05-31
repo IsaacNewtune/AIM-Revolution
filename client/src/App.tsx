@@ -13,6 +13,7 @@ import Home from "@/pages/Home";
 import ListenerDashboard from "@/pages/ListenerDashboard";
 import ArtistDashboard from "@/pages/ArtistDashboard";
 import ManagerDashboard from "@/pages/ManagerDashboard";
+import Discover from "@/pages/Discover";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -39,6 +40,7 @@ function Router() {
         <>
           <Route path="/" component={Home} />
           <Route path="/profile-setup" component={ProfileSetup} />
+          <Route path="/discover" component={Discover} />
           <Route path="/listener" component={ListenerDashboard} />
           <Route path="/artist" component={ArtistDashboard} />
           <Route path="/manager" component={ManagerDashboard} />
