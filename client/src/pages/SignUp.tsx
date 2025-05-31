@@ -1,57 +1,90 @@
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function SignUp() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
-    phoneNumber: '',
     firstName: '',
     lastName: '',
     termsAccepted: false,
   });
-  const [signUpMethod, setSignUpMethod] = useState<'email' | 'phone'>('email');
 
   const accountType = localStorage.getItem('selectedAccountType') || 'listener';
+
+  const registerMutation = useMutation({
+    mutationFn: async (userData: { firstName: string; lastName: string; email: string; password: string; accountType: string }) => {
+      const res = await apiRequest('POST', '/api/auth/register', userData);
+      return res.json();
+    },
+    onSuccess: () => {
+      localStorage.removeItem('selectedAccountType');
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      toast({ title: "Registration successful!" });
+      setLocation('/');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Registration failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSignUp = () => {
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!formData.termsAccepted) {
-      alert('Please accept the terms of use');
+      toast({
+        title: "Terms required",
+        description: "Please accept the terms of use",
+        variant: "destructive"
+      });
       return;
     }
     
-    if (signUpMethod === 'email' && formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Password mismatch",
+        description: "Passwords do not match",
+        variant: "destructive"
+      });
       return;
     }
 
-    // Store form data for the next step
-    localStorage.setItem('signUpData', JSON.stringify(formData));
-    
-    // All users need to authenticate first through Replit OAuth
-    // The account type selection happens after authentication
-    window.location.href = "/api/login";
-  };
-
-  const handleSocialSignUp = (provider: string) => {
-    localStorage.setItem('socialProvider', provider);
-    if (accountType === 'listener') {
-      // After social auth, redirect to subscription plans
-      localStorage.setItem('redirectAfterAuth', '/subscription-plans');
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
     }
-    window.location.href = "/api/login";
+
+    registerMutation.mutate({
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      password: formData.password,
+      accountType
+    });
   };
 
   return (
@@ -65,169 +98,97 @@ export default function SignUp() {
             </p>
           </div>
 
-          {/* Social Sign Up Options */}
-          <div className="space-y-3 mb-6">
-            <Button
-              variant="outline"
-              className="w-full py-3 bg-dark-bg border-gray-600 hover:bg-gray-800 transition-colors"
-              onClick={() => handleSocialSignUp('google')}
-            >
-              <i className="fab fa-google mr-3 text-red-500"></i>
-              Continue with Google
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full py-3 bg-dark-bg border-gray-600 hover:bg-gray-800 transition-colors"
-              onClick={() => handleSocialSignUp('facebook')}
-            >
-              <i className="fab fa-facebook mr-3 text-blue-500"></i>
-              Continue with Facebook
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full py-3 bg-dark-bg border-gray-600 hover:bg-gray-800 transition-colors"
-              onClick={() => handleSocialSignUp('apple')}
-            >
-              <i className="fab fa-apple mr-3"></i>
-              Continue with Apple
-            </Button>
-          </div>
-
-          <div className="flex items-center mb-6">
-            <Separator className="flex-1" />
-            <span className="px-4 text-text-secondary text-sm">or</span>
-            <Separator className="flex-1" />
-          </div>
-
-          {/* Sign Up Method Toggle */}
-          <div className="flex mb-6 bg-dark-bg rounded-lg p-1">
-            <Button
-              variant={signUpMethod === 'email' ? 'default' : 'ghost'}
-              className={`flex-1 ${signUpMethod === 'email' ? 'bg-ai-purple' : ''}`}
-              onClick={() => setSignUpMethod('email')}
-            >
-              Email
-            </Button>
-            <Button
-              variant={signUpMethod === 'phone' ? 'default' : 'ghost'}
-              className={`flex-1 ${signUpMethod === 'phone' ? 'bg-ai-purple' : ''}`}
-              onClick={() => setSignUpMethod('phone')}
-            >
-              Phone
-            </Button>
-          </div>
-
-          {/* Form Fields */}
-          <div className="space-y-4 mb-6">
+          <form onSubmit={handleSignUp} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="firstName">First Name</Label>
                 <Input
                   id="firstName"
+                  type="text"
                   value={formData.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  className="bg-dark-bg border-gray-600 focus:border-ai-purple"
-                  placeholder="John"
+                  className="bg-dark-bg border-gray-600 text-white"
+                  required
                 />
               </div>
               <div>
                 <Label htmlFor="lastName">Last Name</Label>
                 <Input
                   id="lastName"
+                  type="text"
                   value={formData.lastName}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
-                  className="bg-dark-bg border-gray-600 focus:border-ai-purple"
-                  placeholder="Doe"
+                  className="bg-dark-bg border-gray-600 text-white"
+                  required
                 />
               </div>
             </div>
 
-            {signUpMethod === 'email' ? (
-              <>
-                <div>
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="bg-dark-bg border-gray-600 focus:border-ai-purple"
-                    placeholder="your@email.com"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    className="bg-dark-bg border-gray-600 focus:border-ai-purple"
-                    placeholder="Create a strong password"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    className="bg-dark-bg border-gray-600 focus:border-ai-purple"
-                    placeholder="Confirm your password"
-                  />
-                </div>
-              </>
-            ) : (
-              <div>
-                <Label htmlFor="phoneNumber">Phone Number</Label>
-                <Input
-                  id="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                  className="bg-dark-bg border-gray-600 focus:border-ai-purple"
-                  placeholder="+1 (555) 123-4567"
-                />
-              </div>
-            )}
-          </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                className="bg-dark-bg border-gray-600 text-white"
+                required
+              />
+            </div>
 
-          {/* Terms Checkbox */}
-          <div className="flex items-start space-x-3 mb-6">
-            <Checkbox
-              id="terms"
-              checked={formData.termsAccepted}
-              onCheckedChange={(checked) => handleInputChange('termsAccepted', checked as boolean)}
-              className="mt-1"
-            />
-            <Label htmlFor="terms" className="text-sm text-text-secondary cursor-pointer">
-              I agree to the{' '}
-              <a href="#" className="text-ai-purple hover:underline">Terms of Use</a>{' '}
-              and{' '}
-              <a href="#" className="text-ai-purple hover:underline">Privacy Policy</a>
-            </Label>
-          </div>
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                className="bg-dark-bg border-gray-600 text-white"
+                required
+              />
+            </div>
 
-          {/* Sign Up Button */}
-          <Button
-            onClick={handleSignUp}
-            disabled={!formData.termsAccepted}
-            className="w-full py-3 bg-gradient-to-r from-ai-purple to-ai-blue text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
-          >
-            Create Account
-          </Button>
+            <div>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                className="bg-dark-bg border-gray-600 text-white"
+                required
+              />
+            </div>
 
-          {/* Sign In Link */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="terms"
+                checked={formData.termsAccepted}
+                onCheckedChange={(checked) => handleInputChange('termsAccepted', checked as boolean)}
+              />
+              <Label htmlFor="terms" className="text-sm">
+                I agree to the Terms of Service and Privacy Policy
+              </Label>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-ai-purple hover:bg-ai-purple/80"
+              disabled={registerMutation.isPending}
+            >
+              {registerMutation.isPending ? "Creating Account..." : "Create Account"}
+            </Button>
+          </form>
+
           <div className="text-center mt-6">
             <p className="text-text-secondary text-sm">
-              Already have an account?{' '}
-              <a 
-                href="/api/login" 
-                className="text-ai-purple hover:underline font-medium"
+              Already have an account?{" "}
+              <button
+                onClick={() => setLocation('/auth')}
+                className="text-ai-purple hover:underline"
               >
-                Sign In
-              </a>
+                Sign in
+              </button>
             </p>
           </div>
         </CardContent>

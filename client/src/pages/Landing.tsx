@@ -11,8 +11,8 @@ export default function Landing() {
     localStorage.setItem('selectedAccountType', type);
     setShowAccountModal(false);
     
-    // Route to authentication page where users can create accounts
-    window.location.href = "/auth";
+    // Route directly to registration form
+    window.location.href = "/signup";
   };
 
   return (
