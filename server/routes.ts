@@ -619,6 +619,281 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Social Features - Artist Following
+  app.post('/api/artists/:id/follow', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const artistId = parseInt(req.params.id);
+      
+      const follow = await storage.followArtist(userId, artistId);
+      res.status(201).json(follow);
+    } catch (error) {
+      console.error("Error following artist:", error);
+      res.status(500).json({ message: "Failed to follow artist" });
+    }
+  });
+
+  app.delete('/api/artists/:id/follow', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const artistId = parseInt(req.params.id);
+      
+      await storage.unfollowArtist(userId, artistId);
+      res.json({ message: "Artist unfollowed successfully" });
+    } catch (error) {
+      console.error("Error unfollowing artist:", error);
+      res.status(500).json({ message: "Failed to unfollow artist" });
+    }
+  });
+
+  app.get('/api/artists/:id/followers', async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const followers = await storage.getArtistFollowers(artistId);
+      res.json(followers);
+    } catch (error) {
+      console.error("Error fetching artist followers:", error);
+      res.status(500).json({ message: "Failed to fetch followers" });
+    }
+  });
+
+  app.get('/api/users/:id/following', async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const followedArtists = await storage.getFollowedArtists(userId);
+      res.json(followedArtists);
+    } catch (error) {
+      console.error("Error fetching followed artists:", error);
+      res.status(500).json({ message: "Failed to fetch followed artists" });
+    }
+  });
+
+  app.get('/api/artists/:id/is-following', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const artistId = parseInt(req.params.id);
+      
+      const isFollowing = await storage.isFollowingArtist(userId, artistId);
+      res.json({ isFollowing });
+    } catch (error) {
+      console.error("Error checking follow status:", error);
+      res.status(500).json({ message: "Failed to check follow status" });
+    }
+  });
+
+  // Social Features - Song Comments
+  app.post('/api/songs/:id/comments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const songId = req.params.id;
+      
+      const commentData = insertSongCommentSchema.parse({
+        userId,
+        songId,
+        ...req.body,
+      });
+
+      const comment = await storage.addSongComment(commentData);
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      res.status(500).json({ message: "Failed to add comment" });
+    }
+  });
+
+  app.get('/api/songs/:id/comments', async (req, res) => {
+    try {
+      const songId = req.params.id;
+      const comments = await storage.getSongComments(songId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.delete('/api/comments/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const commentId = req.params.id;
+      
+      await storage.deleteSongComment(commentId, userId);
+      res.json({ message: "Comment deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      res.status(500).json({ message: "Failed to delete comment" });
+    }
+  });
+
+  // Social Features - Comment Likes
+  app.post('/api/comments/:id/like', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const commentId = req.params.id;
+      
+      const like = await storage.likeSongComment(userId, commentId);
+      res.status(201).json(like);
+    } catch (error) {
+      console.error("Error liking comment:", error);
+      res.status(500).json({ message: "Failed to like comment" });
+    }
+  });
+
+  app.delete('/api/comments/:id/like', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const commentId = req.params.id;
+      
+      await storage.unlikeSongComment(userId, commentId);
+      res.json({ message: "Comment unliked successfully" });
+    } catch (error) {
+      console.error("Error unliking comment:", error);
+      res.status(500).json({ message: "Failed to unlike comment" });
+    }
+  });
+
+  // Social Features - Song Reviews
+  app.post('/api/songs/:id/reviews', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const songId = req.params.id;
+      
+      const reviewData = insertSongReviewSchema.parse({
+        userId,
+        songId,
+        ...req.body,
+      });
+
+      const review = await storage.addSongReview(reviewData);
+      res.status(201).json(review);
+    } catch (error) {
+      console.error("Error adding song review:", error);
+      res.status(500).json({ message: "Failed to add review" });
+    }
+  });
+
+  app.get('/api/songs/:id/reviews', async (req, res) => {
+    try {
+      const songId = req.params.id;
+      const reviews = await storage.getSongReviews(songId);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching song reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  app.get('/api/songs/:id/reviews/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const songId = req.params.id;
+      
+      const review = await storage.getUserSongReview(userId, songId);
+      res.json(review || null);
+    } catch (error) {
+      console.error("Error fetching user song review:", error);
+      res.status(500).json({ message: "Failed to fetch user review" });
+    }
+  });
+
+  app.put('/api/song-reviews/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const reviewId = req.params.id;
+      const { rating, reviewText } = req.body;
+      
+      const review = await storage.updateSongReview(reviewId, userId, { rating, reviewText });
+      res.json(review);
+    } catch (error) {
+      console.error("Error updating song review:", error);
+      res.status(500).json({ message: "Failed to update review" });
+    }
+  });
+
+  app.delete('/api/song-reviews/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const reviewId = req.params.id;
+      
+      await storage.deleteSongReview(reviewId, userId);
+      res.json({ message: "Review deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting song review:", error);
+      res.status(500).json({ message: "Failed to delete review" });
+    }
+  });
+
+  // Social Features - Artist Reviews
+  app.post('/api/artists/:id/reviews', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const artistId = parseInt(req.params.id);
+      
+      const reviewData = insertArtistReviewSchema.parse({
+        userId,
+        artistId,
+        ...req.body,
+      });
+
+      const review = await storage.addArtistReview(reviewData);
+      res.status(201).json(review);
+    } catch (error) {
+      console.error("Error adding artist review:", error);
+      res.status(500).json({ message: "Failed to add review" });
+    }
+  });
+
+  app.get('/api/artists/:id/reviews', async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const reviews = await storage.getArtistReviews(artistId);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching artist reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  app.get('/api/artists/:id/reviews/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const artistId = parseInt(req.params.id);
+      
+      const review = await storage.getUserArtistReview(userId, artistId);
+      res.json(review || null);
+    } catch (error) {
+      console.error("Error fetching user artist review:", error);
+      res.status(500).json({ message: "Failed to fetch user review" });
+    }
+  });
+
+  app.put('/api/artist-reviews/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const reviewId = req.params.id;
+      const { rating, reviewText } = req.body;
+      
+      const review = await storage.updateArtistReview(reviewId, userId, { rating, reviewText });
+      res.json(review);
+    } catch (error) {
+      console.error("Error updating artist review:", error);
+      res.status(500).json({ message: "Failed to update review" });
+    }
+  });
+
+  app.delete('/api/artist-reviews/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const reviewId = req.params.id;
+      
+      await storage.deleteArtistReview(reviewId, userId);
+      res.json({ message: "Review deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting artist review:", error);
+      res.status(500).json({ message: "Failed to delete review" });
+    }
+  });
+
   // Serve uploaded files
   app.use('/uploads', express.static('uploads'));
 
