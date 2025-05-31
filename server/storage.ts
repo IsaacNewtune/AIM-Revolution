@@ -45,7 +45,9 @@ export interface IStorage {
   
   // Artist operations
   getArtistByUserId(userId: string): Promise<Artist | undefined>;
+  getArtistById(artistId: number): Promise<Artist | undefined>;
   createArtist(artist: InsertArtist): Promise<Artist>;
+  updateArtist(artistId: number, data: Partial<InsertArtist>): Promise<Artist>;
   updateArtistStats(artistId: number, stats: { totalStreams?: number; totalRevenue?: string; totalTips?: string; monthlyListeners?: number }): Promise<void>;
   getArtistAnalytics(artistId: number): Promise<{
     overview: { totalStreams: number; totalRevenue: string; totalTips: string; monthlyListeners: number };
@@ -179,9 +181,23 @@ export class DatabaseStorage implements IStorage {
     return artist;
   }
 
+  async getArtistById(artistId: number): Promise<Artist | undefined> {
+    const [artist] = await db.select().from(artists).where(eq(artists.id, artistId));
+    return artist;
+  }
+
   async createArtist(artist: InsertArtist): Promise<Artist> {
     const [newArtist] = await db.insert(artists).values(artist).returning();
     return newArtist;
+  }
+
+  async updateArtist(artistId: number, data: Partial<InsertArtist>): Promise<Artist> {
+    const [updatedArtist] = await db
+      .update(artists)
+      .set(data)
+      .where(eq(artists.id, artistId))
+      .returning();
+    return updatedArtist;
   }
 
   async updateArtistStats(artistId: number, stats: { totalStreams?: number; totalRevenue?: string; totalTips?: string; monthlyListeners?: number }): Promise<void> {

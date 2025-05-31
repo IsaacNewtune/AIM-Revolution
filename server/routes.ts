@@ -681,6 +681,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get individual artist by ID
+  app.get('/api/artists/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const artist = await storage.getArtistById(artistId);
+      if (!artist) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+      res.json(artist);
+    } catch (error) {
+      console.error("Error fetching artist:", error);
+      res.status(500).json({ message: "Failed to fetch artist" });
+    }
+  });
+
+  // Update artist profile
+  app.patch('/api/artists/:id', upload.fields([
+    { name: 'profileImage', maxCount: 1 },
+    { name: 'bannerImage', maxCount: 1 }
+  ]), isAuthenticated, async (req: any, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      
+      // Handle file uploads
+      let profileImagePath = null;
+      let bannerImagePath = null;
+      
+      if (req.files) {
+        if (req.files.profileImage && req.files.profileImage[0]) {
+          profileImagePath = `/uploads/${req.files.profileImage[0].filename}`;
+        }
+        if (req.files.bannerImage && req.files.bannerImage[0]) {
+          bannerImagePath = `/uploads/${req.files.bannerImage[0].filename}`;
+        }
+      }
+
+      const updateData = {
+        name: req.body.name,
+        bio: req.body.bio || null,
+        location: req.body.location || null,
+        genre: req.body.genre || null,
+        website: req.body.website || null,
+        facebookHandle: req.body.facebookHandle || null,
+        twitterHandle: req.body.twitterHandle || null,
+        instagramHandle: req.body.instagramHandle || null,
+        tiktokHandle: req.body.tiktokHandle || null,
+        youtubeUrl: req.body.youtubeUrl || null,
+        ...(profileImagePath && { profileImageUrl: profileImagePath }),
+        ...(bannerImagePath && { bannerImageUrl: bannerImagePath }),
+      };
+
+      const updatedArtist = await storage.updateArtist(artistId, updateData);
+      res.json(updatedArtist);
+    } catch (error) {
+      console.error('Error updating artist:', error);
+      res.status(500).json({ message: 'Failed to update artist' });
+    }
+  });
+
   // Social Features - Artist Following
   app.post('/api/artists/:id/follow', isAuthenticated, async (req: any, res) => {
     try {
