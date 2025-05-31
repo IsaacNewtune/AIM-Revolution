@@ -16,6 +16,7 @@ import ManagerDashboard from "@/pages/ManagerDashboard";
 import Discover from "@/pages/Discover";
 import ArtistAnalytics from "@/pages/ArtistAnalytics";
 import ArtistSignUp from "@/pages/ArtistSignUp";
+import ManagerSignUp from "@/pages/ManagerSignUp";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -36,6 +37,7 @@ function Router() {
           <Route path="/" component={Landing} />
           <Route path="/signup" component={SignUp} />
           <Route path="/artist-signup" component={ArtistSignUp} />
+          <Route path="/manager-signup" component={ManagerSignUp} />
           <Route path="/subscription-plans" component={SubscriptionPlans} />
           <Route path="/payment-setup" component={PaymentSetup} />
         </>

@@ -14,6 +14,8 @@ export default function Landing() {
     // Route to appropriate sign-up page
     if (type === 'artist') {
       window.location.href = "/artist-signup";
+    } else if (type === 'manager') {
+      window.location.href = "/manager-signup";
     } else {
       window.location.href = "/signup";
     }
