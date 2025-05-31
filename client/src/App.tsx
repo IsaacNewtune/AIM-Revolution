@@ -31,9 +31,6 @@ import NotFound from "@/pages/not-found";
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
 
-  // Debug logging
-  console.log('Router debug:', { isAuthenticated, isLoading, user, hasAccountType: user && (user as any).accountType });
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-dark-bg">
@@ -44,7 +41,6 @@ function Router() {
 
   // If not authenticated, show public pages
   if (!isAuthenticated) {
-    console.log('Showing unauthenticated pages');
     return (
       <Switch>
         <Route path="/" component={Landing} />
@@ -60,11 +56,8 @@ function Router() {
   const needsAccountSetup = isAuthenticated && user && !(user as any).accountType;
 
   if (needsAccountSetup) {
-    console.log('Showing account setup');
     return <AccountTypeSelector />;
   }
-
-  console.log('Showing authenticated pages');
 
   // Authenticated user routes
   return (

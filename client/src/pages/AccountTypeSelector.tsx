@@ -12,13 +12,19 @@ export default function AccountTypeSelector() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedType, setSelectedType] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<string>(() => {
+    // Check if user pre-selected an account type from the landing page
+    return localStorage.getItem('selectedAccountType') || '';
+  });
 
   const updateAccountTypeMutation = useMutation({
     mutationFn: async (accountType: string) => {
       await apiRequest('PUT', '/api/auth/user/account-type', { accountType });
     },
     onSuccess: async (_, accountType) => {
+      // Clear the stored account type preference
+      localStorage.removeItem('selectedAccountType');
+      
       // Invalidate and refetch user data to ensure fresh authentication state
       await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
