@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,9 +15,19 @@ export default function ListenerDashboard() {
   const [showTipModal, setShowTipModal] = useState(false);
   const [tipTarget, setTipTarget] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  // Debounce search query to prevent keyboard issues
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const { data: songs = [], isLoading } = useQuery({
-    queryKey: ['/api/songs', { search: searchQuery }],
+    queryKey: ['/api/songs', { search: debouncedSearchQuery }],
   });
 
   const { data: streamHistory = [] } = useQuery({
