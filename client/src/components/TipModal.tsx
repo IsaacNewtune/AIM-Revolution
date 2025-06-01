@@ -264,7 +264,7 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="grid grid-cols-3 gap-3 mb-6">
             <Button
               variant="outline"
               className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
@@ -275,7 +275,7 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
               }}
             >
               <div className="text-lg font-bold">$5</div>
-              <div className="text-xs text-text-secondary">Quick add</div>
+              <div className="text-xs text-text-secondary">Quick</div>
             </Button>
             <Button
               variant="outline"
@@ -288,6 +288,45 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
             >
               <div className="text-lg font-bold">$10</div>
               <div className="text-xs text-text-secondary">Popular</div>
+            </Button>
+            <Button
+              variant="outline"
+              className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
+              onClick={() => {
+                // Add $20 credits logic here
+                setShowFundingModal(false);
+                toast({ title: "Credits Added", description: "$20.00 added to your account" });
+              }}
+            >
+              <div className="text-lg font-bold">$20</div>
+              <div className="text-xs text-text-secondary">Value</div>
+            </Button>
+          </div>
+
+          <div className="mb-6">
+            <Label htmlFor="funding-amount" className="block text-sm font-medium mb-2">
+              Custom Amount
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary">$</span>
+              <Input
+                id="funding-amount"
+                type="number"
+                min="1.00"
+                step="1.00"
+                className="bg-dark-bg border-gray-600 pl-8 focus:border-ai-purple"
+                placeholder="Enter amount"
+              />
+            </div>
+            <Button
+              className="w-full mt-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+              onClick={() => {
+                // Add custom amount logic here
+                setShowFundingModal(false);
+                toast({ title: "Credits Added", description: "Custom amount added to your account" });
+              }}
+            >
+              Add Credits
             </Button>
           </div>
 
