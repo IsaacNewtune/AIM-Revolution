@@ -114,6 +114,7 @@ export const tips = pgTable("tips", {
   songId: uuid("song_id").references(() => songs.id), // null for artist tips
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   message: text("message"),
+  trackingNumber: varchar("tracking_number").unique().notNull(),
   artistReaction: varchar("artist_reaction", { enum: ["thumbs_up", "heart"] }),
   createdAt: timestamp("created_at").defaultNow(),
 });

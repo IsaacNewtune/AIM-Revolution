@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,15 @@ interface TipModalProps {
 
 export default function TipModal({ open, onOpenChange, target }: TipModalProps) {
   const [customAmount, setCustomAmount] = useState('');
+  const [tipType, setTipType] = useState<'song' | 'artist'>('song');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Get artist information
+  const { data: artist } = useQuery({
+    queryKey: ['/api/artists', target?.data.artistId],
+    enabled: !!target?.data.artistId,
+  });
 
   const tipMutation = useMutation({
     mutationFn: async (tipData: any) => {
@@ -25,8 +32,10 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
     onSuccess: () => {
       toast({ title: "Success", description: "Tip sent successfully!" });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tips'] });
       onOpenChange(false);
       setCustomAmount('');
+      setTipType('song');
     },
     onError: (error: Error) => {
       toast({ 
@@ -40,11 +49,17 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
   const sendTip = (amount: number) => {
     if (!target) return;
 
+    // Generate unique tracking number
+    const trackingNumber = `TIP-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
     const tipData = {
-      toArtistId: 1, // This would be the actual artist ID
-      songId: target.type === 'track' ? target.data.id : null,
+      toArtistId: target.data.artistId, // Use artistId from song data
+      songId: tipType === 'song' ? target.data.id : null,
       amount: amount.toString(),
-      message: `Tip for ${target.data.title || target.data.name}`,
+      message: tipType === 'song' 
+        ? `Tip for song: ${target.data.title}` 
+        : `Tip for artist: ${artist?.name || 'Artist'}`,
+      trackingNumber: trackingNumber,
     };
 
     tipMutation.mutate(tipData);
@@ -74,12 +89,40 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
         
         <div className="text-center mb-6">
           <img 
-            src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100" 
+            src={artist?.profileImageUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"} 
             alt="Artist" 
             className="w-16 h-16 rounded-full object-cover mx-auto mb-3" 
           />
-          <h3 className="font-semibold">AI Artist</h3>
-          <p className="text-text-secondary text-sm">{target.data.title || target.data.name}</p>
+          <h3 className="font-semibold">{artist?.name || 'AI Artist'}</h3>
+          <p className="text-text-secondary text-sm">
+            {tipType === 'song' ? target.data.title : `Support ${artist?.name || 'this artist'}`}
+          </p>
+        </div>
+
+        {/* Tip Type Selection */}
+        <div className="mb-6">
+          <div className="flex bg-dark-bg rounded-lg p-1">
+            <button
+              onClick={() => setTipType('song')}
+              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                tipType === 'song'
+                  ? 'bg-ai-purple text-white'
+                  : 'text-text-secondary hover:text-white'
+              }`}
+            >
+              Tip Song
+            </button>
+            <button
+              onClick={() => setTipType('artist')}
+              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                tipType === 'artist'
+                  ? 'bg-ai-purple text-white'
+                  : 'text-text-secondary hover:text-white'
+              }`}
+            >
+              Tip Artist
+            </button>
+          </div>
         </div>
         
         <div className="grid grid-cols-3 gap-3 mb-6">
