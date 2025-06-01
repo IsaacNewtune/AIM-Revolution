@@ -15,6 +15,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, Upload, Music } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 
 const aiGenerators = [
   "Suno",
@@ -81,6 +83,16 @@ export default function SongUpload() {
   const queryClient = useQueryClient();
   const [coverArt, setCoverArt] = useState<File | null>(null);
   const [songFiles, setSongFiles] = useState<{ [key: number]: File }>({});
+  
+  // Get artistId from URL params if manager is uploading for an artist
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetArtistId = urlParams.get('artistId');
+  
+  // If user is a manager, fetch their managed artists
+  const { data: managedArtists = [] } = useQuery({
+    queryKey: ['/api/manager/artists'],
+    enabled: user?.accountType === 'manager'
+  });
 
   const form = useForm<UploadFormData>({
     resolver: zodResolver(uploadSchema),
@@ -122,8 +134,12 @@ export default function SongUpload() {
         formData.append(`songFile_${index}`, file);
       });
       
-      // Add metadata
-      formData.append('metadata', JSON.stringify(data));
+      // Add metadata with target artist ID if manager is uploading
+      const uploadData = {
+        ...data,
+        targetArtistId: targetArtistId || undefined
+      };
+      formData.append('metadata', JSON.stringify(uploadData));
       
       return apiRequest("POST", "/api/songs/upload", formData);
     },

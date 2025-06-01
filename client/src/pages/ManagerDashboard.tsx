@@ -137,6 +137,15 @@ export default function ManagerDashboard() {
                     <Button 
                       variant="ghost" 
                       size="icon" 
+                      className="text-ai-blue hover:text-blue-400 mr-2"
+                      onClick={() => setLocation(`/upload?artistId=${artist.id}`)}
+                      title="Upload Song"
+                    >
+                      <i className="fas fa-upload"></i>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
                       className="text-text-secondary hover:text-white"
                       onClick={() => window.location.href = `/edit-artist/${artist.id}`}
                     >

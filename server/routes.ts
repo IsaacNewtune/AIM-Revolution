@@ -349,14 +349,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/songs/upload', requireAuth, upload.any(), async (req: any, res) => {
     try {
       const userId = req.session.userId;
-      const artist = await storage.getArtistByUserId(userId);
+      const user = await storage.getUser(userId);
+      const metadata = JSON.parse(req.body.metadata);
       
-      if (!artist) {
-        return res.status(404).json({ message: "Artist profile not found" });
+      let artist;
+      
+      // If user is a manager and targetArtistId is provided, upload for that artist
+      if (user?.accountType === 'manager' && metadata.targetArtistId) {
+        artist = await storage.getArtistById(parseInt(metadata.targetArtistId));
+        
+        if (!artist) {
+          return res.status(404).json({ message: "Target artist not found" });
+        }
+        
+        // Verify the manager manages this artist
+        const managedArtists = await storage.getArtistsByManager(userId);
+        const managesThisArtist = managedArtists.some((a: any) => a.id === artist.id);
+        
+        if (!managesThisArtist) {
+          return res.status(403).json({ message: "You don't manage this artist" });
+        }
+      } else {
+        // Regular artist upload
+        artist = await storage.getArtistByUserId(userId);
+        
+        if (!artist) {
+          return res.status(404).json({ message: "Artist profile not found" });
+        }
       }
 
       const files = req.files as Express.Multer.File[];
-      const metadata = JSON.parse(req.body.metadata);
       
       // Find cover art file
       const coverArtFile = files.find(f => f.fieldname === 'coverArt');
