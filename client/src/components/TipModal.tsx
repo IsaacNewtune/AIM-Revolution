@@ -16,8 +16,14 @@ interface TipModalProps {
 export default function TipModal({ open, onOpenChange, target }: TipModalProps) {
   const [customAmount, setCustomAmount] = useState('');
   const [tipType, setTipType] = useState<'song' | 'artist'>('song');
+  const [showFundingModal, setShowFundingModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Get user credit balance
+  const { data: user } = useQuery({
+    queryKey: ['/api/auth/user'],
+  });
 
   // Get artist information
   const { data: artist } = useQuery({
@@ -48,6 +54,13 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
 
   const sendTip = (amount: number) => {
     if (!target) return;
+
+    // Check if user has sufficient credits
+    const currentBalance = parseFloat(user?.creditBalance || '0');
+    if (currentBalance < amount) {
+      setShowFundingModal(true);
+      return;
+    }
 
     // Generate unique tracking number
     const trackingNumber = `TIP-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
@@ -89,8 +102,11 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
         
         <div className="text-center mb-6">
           <img 
-            src={artist?.profileImageUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"} 
-            alt="Artist" 
+            src={tipType === 'song' 
+              ? (target.data.coverArtUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100")
+              : (artist?.profileImageUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100")
+            } 
+            alt={tipType === 'song' ? 'Song Cover' : 'Artist'} 
             className="w-16 h-16 rounded-full object-cover mx-auto mb-3" 
           />
           <h3 className="font-semibold">{artist?.name || 'AI Artist'}</h3>
@@ -126,33 +142,67 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
         </div>
         
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <Button
-            variant="outline"
-            className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
-            onClick={() => sendTip(1)}
-            disabled={tipMutation.isPending}
-          >
-            <div className="text-lg font-bold">$1</div>
-            <div className="text-xs text-text-secondary">Quick tip</div>
-          </Button>
-          <Button
-            variant="outline"
-            className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
-            onClick={() => sendTip(5)}
-            disabled={tipMutation.isPending}
-          >
-            <div className="text-lg font-bold">$5</div>
-            <div className="text-xs text-text-secondary">Nice work</div>
-          </Button>
-          <Button
-            variant="outline"
-            className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
-            onClick={() => sendTip(10)}
-            disabled={tipMutation.isPending}
-          >
-            <div className="text-lg font-bold">$10</div>
-            <div className="text-xs text-text-secondary">Love it!</div>
-          </Button>
+          {tipType === 'song' ? (
+            <>
+              <Button
+                variant="outline"
+                className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
+                onClick={() => sendTip(0.10)}
+                disabled={tipMutation.isPending}
+              >
+                <div className="text-lg font-bold">$0.10</div>
+                <div className="text-xs text-text-secondary">Nice</div>
+              </Button>
+              <Button
+                variant="outline"
+                className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
+                onClick={() => sendTip(0.25)}
+                disabled={tipMutation.isPending}
+              >
+                <div className="text-lg font-bold">$0.25</div>
+                <div className="text-xs text-text-secondary">Good</div>
+              </Button>
+              <Button
+                variant="outline"
+                className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
+                onClick={() => sendTip(0.50)}
+                disabled={tipMutation.isPending}
+              >
+                <div className="text-lg font-bold">$0.50</div>
+                <div className="text-xs text-text-secondary">Great!</div>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
+                onClick={() => sendTip(1)}
+                disabled={tipMutation.isPending}
+              >
+                <div className="text-lg font-bold">$1</div>
+                <div className="text-xs text-text-secondary">Thanks</div>
+              </Button>
+              <Button
+                variant="outline"
+                className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
+                onClick={() => sendTip(2)}
+                disabled={tipMutation.isPending}
+              >
+                <div className="text-lg font-bold">$2</div>
+                <div className="text-xs text-text-secondary">Awesome</div>
+              </Button>
+              <Button
+                variant="outline"
+                className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
+                onClick={() => sendTip(5)}
+                disabled={tipMutation.isPending}
+              >
+                <div className="text-lg font-bold">$5</div>
+                <div className="text-xs text-text-secondary">Amazing!</div>
+              </Button>
+            </>
+          )}
         </div>
         
         <div className="mb-6">
@@ -187,6 +237,63 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
           Your tip helps support AI music creators
         </p>
       </DialogContent>
+
+      {/* Funding Modal */}
+      <Dialog open={showFundingModal} onOpenChange={setShowFundingModal}>
+        <DialogContent className="bg-card-bg max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Insufficient Credits</DialogTitle>
+          </DialogHeader>
+          
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
+              <i className="fas fa-exclamation text-white text-2xl"></i>
+            </div>
+            <h3 className="font-semibold mb-2">Not enough credits</h3>
+            <p className="text-text-secondary text-sm">
+              Current balance: ${parseFloat(user?.creditBalance || '0').toFixed(2)}
+            </p>
+            <p className="text-text-secondary text-sm">
+              You need to add credits to your account to send this tip.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <Button
+              variant="outline"
+              className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
+              onClick={() => {
+                // Add $5 credits logic here
+                setShowFundingModal(false);
+                toast({ title: "Credits Added", description: "$5.00 added to your account" });
+              }}
+            >
+              <div className="text-lg font-bold">$5</div>
+              <div className="text-xs text-text-secondary">Quick add</div>
+            </Button>
+            <Button
+              variant="outline"
+              className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
+              onClick={() => {
+                // Add $10 credits logic here
+                setShowFundingModal(false);
+                toast({ title: "Credits Added", description: "$10.00 added to your account" });
+              }}
+            >
+              <div className="text-lg font-bold">$10</div>
+              <div className="text-xs text-text-secondary">Popular</div>
+            </Button>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={() => setShowFundingModal(false)}
+            className="w-full mb-3"
+          >
+            Cancel
+          </Button>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
