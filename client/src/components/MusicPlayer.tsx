@@ -58,7 +58,7 @@ export default function MusicPlayer() {
             <i className="fas fa-coins mr-1"></i>Tip
           </Button>
         </div>
-        <div className="flex items-center justify-center space-x-6">
+        <div className="flex items-center justify-center space-x-4">
           <Button
             size="icon"
             onClick={togglePlay}
@@ -66,14 +66,16 @@ export default function MusicPlayer() {
           >
             <i className={`fas fa-${isPlaying ? 'pause' : 'play'}`}></i>
           </Button>
-          <div className="flex-1 max-w-xs">
+          <div className="flex-1 flex items-center space-x-2">
+            <span className="text-xs text-text-secondary w-10 text-right">{formatTime(currentTime)}</span>
             <Slider
               value={[currentTime]}
-              max={duration}
+              max={duration || 100}
               step={1}
               onValueChange={handleSeek}
-              className="w-full"
+              className="flex-1"
             />
+            <span className="text-xs text-text-secondary w-12">-{formatTime((duration || 0) - currentTime)}</span>
           </div>
         </div>
       </div>
