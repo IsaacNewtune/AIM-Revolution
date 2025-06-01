@@ -69,6 +69,7 @@ const uploadSchema = z.object({
   language: z.string().min(1, "Language is required"),
   primaryGenre: z.string().min(1, "Primary genre is required"),
   secondaryGenre: z.string().optional(),
+  targetArtistId: z.string().optional(),
   songs: z.array(songSchema),
   agreedToPromoServices: z.boolean().refine(val => val === true, "You must agree not to use promo services"),
   agreedToAIGuidelines: z.boolean().refine(val => val === true, "You must agree to AI generator guidelines"),
@@ -137,7 +138,7 @@ export default function SongUpload() {
       // Add metadata with target artist ID if manager is uploading
       const uploadData = {
         ...data,
-        targetArtistId: targetArtistId || undefined
+        targetArtistId: targetArtistId || data.targetArtistId || undefined
       };
       formData.append('metadata', JSON.stringify(uploadData));
       
@@ -241,6 +242,25 @@ export default function SongUpload() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Artist Selection for Managers */}
+                  {user?.accountType === 'manager' && !targetArtistId && (
+                    <div className="space-y-2">
+                      <Label>Select Artist</Label>
+                      <Select onValueChange={(value) => form.setValue('targetArtistId', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose an artist to upload for" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.isArray(managedArtists) && managedArtists.map((artist: any) => (
+                            <SelectItem key={artist.id} value={artist.id.toString()}>
+                              {artist.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   <FormField
                     control={form.control}

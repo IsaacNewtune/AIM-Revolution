@@ -352,7 +352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       const metadata = JSON.parse(req.body.metadata);
       
-      let artist;
+      let artist: any;
       
       // If user is a manager and targetArtistId is provided, upload for that artist
       if (user?.accountType === 'manager' && metadata.targetArtistId) {
