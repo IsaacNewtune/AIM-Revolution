@@ -22,7 +22,7 @@ export default function Landing() {
         <nav className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-2">
             <i className="fas fa-brain text-ai-purple text-2xl"></i>
-            <span className="text-2xl font-bold bg-gradient-to-r from-ai-purple to-ai-blue bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-green-500 bg-clip-text text-transparent">
               AIM
             </span>
           </div>
@@ -59,7 +59,7 @@ export default function Landing() {
         <div className="text-center max-w-4xl mx-auto px-6">
           <h1 className="text-6xl md:text-8xl font-bold mb-6">
             THE FUTURE OF{" "}
-            <span className="bg-gradient-to-r from-ai-purple via-ai-blue to-spotify-green bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-purple-500 via-blue-500 to-green-500 bg-clip-text text-transparent">
               AI MUSIC
             </span>
           </h1>
