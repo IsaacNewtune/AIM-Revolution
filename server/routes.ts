@@ -203,6 +203,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Logout route
+  app.get('/api/logout', async (req: any, res) => {
+    try {
+      if (req.session) {
+        req.session.destroy((err: any) => {
+          if (err) {
+            console.error("Error destroying session:", err);
+            return res.status(500).json({ message: "Logout failed" });
+          }
+          res.clearCookie('connect.sid');
+          res.redirect('/');
+        });
+      } else {
+        res.redirect('/');
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.status(500).json({ message: "Logout failed" });
+    }
+  });
+
   app.put('/api/auth/user/account-type', requireAuth, async (req: any, res) => {
     try {
       const userId = req.session.userId;
