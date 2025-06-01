@@ -158,12 +158,17 @@ export default function SongUpload() {
         credentials: "include"
       });
       
+      console.log("Upload response status:", response.status);
+      console.log("Upload response ok:", response.ok);
+      
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`${response.status}: ${errorText}`);
       }
       
-      return response;
+      const result = await response.json();
+      console.log("Upload result:", result);
+      return result;
     },
     onSuccess: () => {
       toast({
