@@ -60,7 +60,7 @@ export default function Landing() {
           <h1 className="text-6xl md:text-8xl font-bold mb-6">
             THE FUTURE OF{" "}
             <span className="bg-gradient-to-r from-purple-500 via-blue-500 to-green-500 bg-clip-text text-transparent">
-              AI MUSIC
+              MUSIC
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-text-secondary mb-8 max-w-2xl mx-auto">
