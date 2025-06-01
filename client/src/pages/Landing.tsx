@@ -23,7 +23,7 @@ export default function Landing() {
           <div className="flex items-center space-x-2">
             <i className="fas fa-brain text-ai-purple text-2xl"></i>
             <span className="text-2xl font-bold bg-gradient-to-r from-ai-purple to-ai-blue bg-clip-text text-transparent">
-              AiBeats
+              AIM
             </span>
           </div>
           <div className="hidden md:flex items-center space-x-8">

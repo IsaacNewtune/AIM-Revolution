@@ -142,7 +142,7 @@ export default function AuthPage() {
           <h1 className="text-4xl font-bold mb-6">
             Welcome to{" "}
             <span className="bg-gradient-to-r from-ai-purple to-ai-blue bg-clip-text text-transparent">
-              AiBeats
+              AIM
             </span>
           </h1>
           <p className="text-xl text-purple-100 mb-8">

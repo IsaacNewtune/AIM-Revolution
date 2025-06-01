@@ -38,7 +38,7 @@ export default function SignUp() {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       toast({ 
         title: "Account created successfully!", 
-        description: "Welcome to AiBeats! Now choose your subscription plan." 
+        description: "Welcome to AIM! Now choose your subscription plan." 
       });
       setLocation('/subscription-plans');
     },
@@ -105,7 +105,7 @@ export default function SignUp() {
       <Card className="bg-card-bg max-w-md w-full">
         <CardContent className="p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">Join AiBeats</h1>
+            <h1 className="text-3xl font-bold mb-2">Join AIM</h1>
             <p className="text-text-secondary">
               Create your {accountType} account
             </p>
