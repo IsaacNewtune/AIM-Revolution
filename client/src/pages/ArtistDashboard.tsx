@@ -1,26 +1,11 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function ArtistDashboard() {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [uploadData, setUploadData] = useState({
-    title: '',
-    description: '',
-    aiGenerationMethod: 'fully_ai',
-  });
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [artworkFile, setArtworkFile] = useState<File | null>(null);
 
   const { data: artist } = useQuery({
     queryKey: ['/api/artist/profile'],
@@ -36,51 +21,7 @@ export default function ArtistDashboard() {
     enabled: !!artist?.id,
   });
 
-  const uploadMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const response = await fetch('/api/songs/upload', {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      });
-      if (!response.ok) throw new Error('Upload failed');
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Success", description: "Track uploaded successfully!" });
-      queryClient.invalidateQueries({ queryKey: ['/api/songs/artist'] });
-      setUploadData({ title: '', description: '', aiGenerationMethod: 'fully_ai' });
-      setAudioFile(null);
-      setArtworkFile(null);
-    },
-    onError: (error: Error) => {
-      toast({ 
-        title: "Upload Failed", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
 
-  const handleUpload = () => {
-    if (!audioFile || !uploadData.title) {
-      toast({ 
-        title: "Missing Information", 
-        description: "Please provide a title and audio file",
-        variant: "destructive" 
-      });
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('audio', audioFile);
-    if (artworkFile) formData.append('artwork', artworkFile);
-    formData.append('title', uploadData.title);
-    formData.append('description', uploadData.description);
-    formData.append('aiGenerationMethod', uploadData.aiGenerationMethod);
-
-    uploadMutation.mutate(formData);
-  };
 
   const stats = {
     totalStreams: songs.reduce((sum: number, song: any) => sum + (song.streamCount || 0), 0),
@@ -178,100 +119,37 @@ export default function ArtistDashboard() {
           </Card>
         </div>
 
-        {/* Upload Section */}
+        {/* Quick Actions */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">Upload New Track</h2>
-          <Card className="bg-card-bg">
-            <CardContent className="p-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <Label className="block text-sm font-medium mb-2">Track File</Label>
-                  <div 
-                    className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center hover:border-ai-purple transition-colors cursor-pointer"
-                    onClick={() => document.getElementById('audio-upload')?.click()}
-                  >
-                    <i className="fas fa-upload text-3xl text-text-secondary mb-4"></i>
-                    <p className="text-text-secondary">
-                      {audioFile ? audioFile.name : 'Drop your AI-generated track here or click to browse'}
-                    </p>
-                    <p className="text-xs text-text-secondary mt-2">MP3, WAV, FLAC up to 50MB</p>
-                    <input
-                      id="audio-upload"
-                      type="file"
-                      accept="audio/*"
-                      className="hidden"
-                      onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label className="block text-sm font-medium mb-2">Album Artwork</Label>
-                  <div 
-                    className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center hover:border-ai-purple transition-colors cursor-pointer"
-                    onClick={() => document.getElementById('artwork-upload')?.click()}
-                  >
-                    <i className="fas fa-image text-3xl text-text-secondary mb-4"></i>
-                    <p className="text-text-secondary">
-                      {artworkFile ? artworkFile.name : 'Upload cover art'}
-                    </p>
-                    <p className="text-xs text-text-secondary mt-2">JPG, PNG minimum 1400x1400px</p>
-                    <input
-                      id="artwork-upload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => setArtworkFile(e.target.files?.[0] || null)}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="grid md:grid-cols-2 gap-6 mt-6">
-                <div>
-                  <Label htmlFor="title">Track Title</Label>
-                  <Input
-                    id="title"
-                    value={uploadData.title}
-                    onChange={(e) => setUploadData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Enter track title"
-                    className="bg-dark-bg border-gray-600 focus:border-ai-purple"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="ai-method">AI Generation Method</Label>
-                  <Select 
-                    value={uploadData.aiGenerationMethod} 
-                    onValueChange={(value) => setUploadData(prev => ({ ...prev, aiGenerationMethod: value }))}
-                  >
-                    <SelectTrigger className="bg-dark-bg border-gray-600 focus:border-ai-purple">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fully_ai">Fully AI Generated</SelectItem>
-                      <SelectItem value="ai_assisted">AI-Assisted Composition</SelectItem>
-                      <SelectItem value="ai_post_processing">AI Post-Processing</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="mt-6">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={uploadData.description}
-                  onChange={(e) => setUploadData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe your AI-generated track..."
-                  className="bg-dark-bg border-gray-600 focus:border-ai-purple h-24 resize-none"
-                />
-              </div>
-              <Button
-                onClick={handleUpload}
-                disabled={uploadMutation.isPending}
-                className="mt-6 px-6 py-3 bg-gradient-to-r from-ai-purple to-ai-blue text-white rounded-lg hover:shadow-lg transition-all"
-              >
-                {uploadMutation.isPending ? 'Uploading...' : 'Upload Track'}
-              </Button>
-            </CardContent>
-          </Card>
+          <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <Button
+              onClick={() => window.location.href = '/upload'}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white p-6 h-auto flex flex-col items-center space-y-2"
+            >
+              <i className="fas fa-upload text-2xl"></i>
+              <span className="text-lg font-medium">Upload New Track</span>
+              <span className="text-sm opacity-90">Upload your AI-generated music</span>
+            </Button>
+            <Button
+              onClick={() => window.location.href = '/analytics'}
+              variant="outline"
+              className="border-gray-600 text-white hover:bg-gray-800 p-6 h-auto flex flex-col items-center space-y-2"
+            >
+              <i className="fas fa-chart-bar text-2xl"></i>
+              <span className="text-lg font-medium">View Analytics</span>
+              <span className="text-sm opacity-90">Track your performance</span>
+            </Button>
+            <Button
+              onClick={() => window.location.href = '/playlists'}
+              variant="outline"
+              className="border-gray-600 text-white hover:bg-gray-800 p-6 h-auto flex flex-col items-center space-y-2"
+            >
+              <i className="fas fa-list text-2xl"></i>
+              <span className="text-lg font-medium">Manage Playlists</span>
+              <span className="text-sm opacity-90">Organize your music</span>
+            </Button>
+          </div>
         </section>
 
         {/* Recent Releases */}
