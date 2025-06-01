@@ -36,7 +36,50 @@ export default function MusicPlayer() {
     <>
       <div className="fixed bottom-0 left-0 right-0 bg-card-bg border-t border-gray-800 p-4 z-50">
       
-      <div className="flex items-center justify-between max-w-full mx-auto">
+      {/* Mobile Layout */}
+      <div className="lg:hidden">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-3 flex-1">
+            <img 
+              src={currentSong.coverArtUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"} 
+              alt="Now Playing" 
+              className="w-12 h-12 rounded object-cover" 
+            />
+            <div className="flex-1 min-w-0">
+              <h4 className="font-medium text-sm truncate">{currentSong.title}</h4>
+              <p className="text-text-secondary text-xs truncate">{currentSong.artistName || 'AI Artist'}</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => setShowTipModal(true)}
+            className="px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-black text-xs rounded-full ml-2 flex-shrink-0"
+          >
+            <i className="fas fa-coins mr-1"></i>Tip
+          </Button>
+        </div>
+        <div className="flex items-center justify-center space-x-6">
+          <Button
+            size="icon"
+            onClick={togglePlay}
+            className="w-8 h-8 bg-white text-black rounded-full hover:bg-gray-200 transition-colors"
+          >
+            <i className={`fas fa-${isPlaying ? 'pause' : 'play'}`}></i>
+          </Button>
+          <div className="flex-1 max-w-xs">
+            <Slider
+              value={[currentTime]}
+              max={duration}
+              step={1}
+              onValueChange={handleSeek}
+              className="w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden lg:flex items-center justify-between max-w-full mx-auto">
         <div className="flex items-center space-x-4 flex-1">
           <img 
             src={currentSong.coverArtUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"} 
