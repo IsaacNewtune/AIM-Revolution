@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Menu, X } from "lucide-react";
 
 export default function Landing() {
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const selectAccountType = (type: string) => {
     // Store account type preference in localStorage for the setup flow
@@ -26,6 +28,7 @@ export default function Landing() {
               AIM
             </span>
           </div>
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <a href="#features" className="text-text-secondary hover:text-white transition-colors">
               Features
@@ -44,7 +47,60 @@ export default function Landing() {
               Sign In
             </Button>
           </div>
+
+          {/* Mobile Navigation Button */}
+          <div className="md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+          </div>
         </nav>
+
+        {/* Mobile Navigation Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 right-0 bg-dark-bg border-t border-gray-800 z-50">
+            <div className="px-6 py-4 space-y-4">
+              <a 
+                href="#features" 
+                className="block text-text-secondary hover:text-white transition-colors py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Features
+              </a>
+              <a 
+                href="#pricing" 
+                className="block text-text-secondary hover:text-white transition-colors py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Pricing
+              </a>
+              <a 
+                href="#about" 
+                className="block text-text-secondary hover:text-white transition-colors py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                About
+              </a>
+              <div className="pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    window.location.href = "/auth";
+                  }}
+                  className="w-full border-ai-purple text-ai-purple hover:bg-ai-purple hover:text-white"
+                >
+                  Sign In
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}
