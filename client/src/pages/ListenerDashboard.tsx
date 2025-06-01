@@ -168,9 +168,9 @@ export default function ListenerDashboard() {
             </h2>
             {!searchQuery && <a href="#" className="text-text-secondary hover:text-white text-sm">Show all</a>}
           </div>
-          {songs.length === 0 && searchQuery ? (
+          {songs.length === 0 && debouncedSearchQuery ? (
             <div className="text-center py-8 text-text-secondary">
-              <p>No songs found for "{searchQuery}"</p>
+              <p>No songs found for "{debouncedSearchQuery}"</p>
               <p className="text-sm mt-2">Try searching for different keywords or browse trending music</p>
             </div>
           ) : songs.length === 0 ? (
@@ -201,7 +201,7 @@ export default function ListenerDashboard() {
                 />
                 <div className="flex-1">
                   <h3 className="font-medium">{song.title}</h3>
-                  <p className="text-text-secondary text-sm">AI Artist</p>
+                  <p className="text-text-secondary text-sm">{song.artistName || 'AI Artist'}</p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button
