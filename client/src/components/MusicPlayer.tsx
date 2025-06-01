@@ -43,16 +43,16 @@ export default function MusicPlayer() {
             alt="Now Playing" 
             className="w-14 h-14 rounded object-cover" 
           />
-          <div>
+          <div className="flex-1">
             <h4 className="font-medium">{currentSong.title}</h4>
-            <p className="text-text-secondary text-sm">AI Artist</p>
+            <p className="text-text-secondary text-sm">{currentSong.artistName || 'AI Artist'}</p>
           </div>
           <Button
             size="sm"
             onClick={() => setShowTipModal(true)}
-            className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black text-xs rounded-full"
+            className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black text-xs rounded-full ml-4"
           >
-            <i className="fas fa-coins"></i>
+            <i className="fas fa-coins mr-1"></i>Tip
           </Button>
         </div>
         
