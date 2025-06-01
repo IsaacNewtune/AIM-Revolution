@@ -46,7 +46,7 @@ export default function Sidebar({ userType }: SidebarProps) {
   const navigationItems = getNavigationItems();
 
   return (
-    <div className="fixed left-0 top-0 w-64 h-full bg-black p-6">
+    <div className="hidden lg:block fixed left-0 top-0 w-64 h-full bg-black p-6">
       <div className="flex items-center space-x-2 mb-8">
         <i className="fas fa-brain text-ai-purple text-xl"></i>
         <span className="text-xl font-bold">AIM</span>

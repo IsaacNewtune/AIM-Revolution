@@ -7,7 +7,8 @@ import Sidebar from "@/components/Sidebar";
 import MusicPlayer from "@/components/MusicPlayer";
 import TipModal from "@/components/TipModal";
 import { useAuth } from "@/hooks/useAuth";
-import { Search } from "lucide-react";
+import { Search, Menu, Home, Disc, List, Heart, Coins } from "lucide-react";
+import { Link } from "wouter";
 
 export default function ListenerDashboard() {
   const { user } = useAuth();
@@ -65,14 +66,49 @@ export default function ListenerDashboard() {
     <div className="min-h-screen bg-dark-bg text-white">
       <Sidebar userType="listener" />
       
+      {/* Mobile Navigation */}
+      <div className="lg:hidden bg-black border-b border-gray-800 p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <i className="fas fa-brain text-ai-purple text-xl"></i>
+            <span className="text-xl font-bold">AIM</span>
+          </div>
+          <img 
+            src={user?.profileImageUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"} 
+            alt="User Profile" 
+            className="w-8 h-8 rounded-full object-cover" 
+          />
+        </div>
+        <div className="flex space-x-1 overflow-x-auto">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="flex-shrink-0">
+              <Home className="h-4 w-4 mr-2" />
+              Home
+            </Button>
+          </Link>
+          <Link href="/discover">
+            <Button variant="ghost" size="sm" className="flex-shrink-0">
+              <Disc className="h-4 w-4 mr-2" />
+              Discover
+            </Button>
+          </Link>
+          <Link href="/playlists">
+            <Button variant="ghost" size="sm" className="flex-shrink-0">
+              <List className="h-4 w-4 mr-2" />
+              Playlists
+            </Button>
+          </Link>
+        </div>
+      </div>
+
       {/* Main Content */}
-      <div className="ml-64 p-6 pb-24">
+      <div className="lg:ml-64 p-4 lg:p-6 pb-24">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6 lg:mb-8">
+          <h1 className="text-2xl lg:text-3xl font-bold mb-4 lg:mb-0">
             Good evening, {user?.firstName || 'Music Lover'}
           </h1>
-          <div className="flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-4">
             <Button variant="ghost" size="icon">
               <i className="fas fa-bell"></i>
             </Button>
