@@ -388,7 +388,8 @@ export class DatabaseStorage implements IStorage {
         revenue: songs.revenue,
         isPublished: songs.isPublished,
         createdAt: songs.createdAt,
-        artistName: artists.name
+        artistName: artists.name,
+        artistProfileImageUrl: artists.profileImageUrl
       })
       .from(songs)
       .innerJoin(artists, eq(songs.artistId, artists.id))

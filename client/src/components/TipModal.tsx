@@ -25,11 +25,8 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
     queryKey: ['/api/auth/user'],
   });
 
-  // Get artist information
-  const { data: artist } = useQuery({
-    queryKey: ['/api/artists', target?.data.artistId],
-    enabled: !!target?.data.artistId,
-  });
+  // Get artist information from song data
+  const artistName = target?.data.artistName || 'AI Artist';
 
   const tipMutation = useMutation({
     mutationFn: async (tipData: any) => {
@@ -71,7 +68,7 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
       amount: amount.toString(),
       message: tipType === 'song' 
         ? `Tip for song: ${target.data.title}` 
-        : `Tip for artist: ${artist?.name || 'Artist'}`,
+        : `Tip for artist: ${artistName}`,
       trackingNumber: trackingNumber,
     };
 
@@ -104,14 +101,23 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
           <img 
             src={tipType === 'song' 
               ? (target.data.coverArtUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100")
-              : (artist?.profileImageUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100")
+              : (target.data.artistProfileImageUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100")
             } 
             alt={tipType === 'song' ? 'Song Cover' : 'Artist'} 
             className="w-16 h-16 rounded-full object-cover mx-auto mb-3" 
           />
-          <h3 className="font-semibold">{artist?.name || 'AI Artist'}</h3>
+          <h3 className="font-semibold">
+            {tipType === 'song' ? (
+              <span className="font-bold">{target.data.title}</span>
+            ) : (
+              artistName
+            )}
+          </h3>
           <p className="text-text-secondary text-sm">
-            {tipType === 'song' ? target.data.title : `Support ${artist?.name || 'this artist'}`}
+            {tipType === 'song' ? 
+              `by ${artistName}` : 
+              `Support ${artistName}`
+            }
           </p>
         </div>
 
