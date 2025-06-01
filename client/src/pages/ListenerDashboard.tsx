@@ -2,19 +2,22 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import Sidebar from "@/components/Sidebar";
 import MusicPlayer from "@/components/MusicPlayer";
 import TipModal from "@/components/TipModal";
 import { useAuth } from "@/hooks/useAuth";
+import { Search } from "lucide-react";
 
 export default function ListenerDashboard() {
   const { user } = useAuth();
   const [currentSong, setCurrentSong] = useState<any>(null);
   const [showTipModal, setShowTipModal] = useState(false);
   const [tipTarget, setTipTarget] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: songs = [], isLoading } = useQuery({
-    queryKey: ['/api/songs'],
+    queryKey: ['/api/songs', { search: searchQuery }],
   });
 
   const { data: streamHistory = [] } = useQuery({
@@ -70,6 +73,20 @@ export default function ListenerDashboard() {
           </div>
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Search for songs, artists, or genres..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-card-bg border-gray-700 text-white placeholder-gray-400"
+            />
+          </div>
+        </div>
+
         {/* Recently Played */}
         {recentlyPlayed.length > 0 && (
           <section className="mb-8">
@@ -96,18 +113,31 @@ export default function ListenerDashboard() {
           </section>
         )}
 
-        {/* Trending AI Music */}
+        {/* Search Results or Trending AI Music */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Trending AI Music</h2>
-            <a href="#" className="text-text-secondary hover:text-white text-sm">Show all</a>
+            <h2 className="text-2xl font-bold">
+              {searchQuery ? `Search Results for "${searchQuery}"` : "Trending AI Music"}
+            </h2>
+            {!searchQuery && <a href="#" className="text-text-secondary hover:text-white text-sm">Show all</a>}
           </div>
-          <div className="space-y-2">
-            {songs.slice(0, 10).map((song: any, index: number) => (
-              <div 
-                key={song.id}
-                className="flex items-center space-x-4 p-3 rounded-lg hover:bg-card-bg transition-colors cursor-pointer group"
-              >
+          {songs.length === 0 && searchQuery ? (
+            <div className="text-center py-8 text-text-secondary">
+              <p>No songs found for "{searchQuery}"</p>
+              <p className="text-sm mt-2">Try searching for different keywords or browse trending music</p>
+            </div>
+          ) : songs.length === 0 ? (
+            <div className="text-center py-8 text-text-secondary">
+              <p>No songs available yet</p>
+              <p className="text-sm mt-2">Check back later for new AI-generated music</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {songs.slice(0, 10).map((song: any, index: number) => (
+                <div 
+                  key={song.id}
+                  className="flex items-center space-x-4 p-3 rounded-lg hover:bg-card-bg transition-colors cursor-pointer group"
+                >
                 <span className="text-text-secondary w-4">{index + 1}</span>
                 <Button
                   variant="ghost"
@@ -139,8 +169,9 @@ export default function ListenerDashboard() {
                   </span>
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
 
