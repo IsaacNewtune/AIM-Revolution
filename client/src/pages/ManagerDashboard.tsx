@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
+import { Settings, Upload, Plus } from "lucide-react";
 
 export default function ManagerDashboard() {
   const { user } = useAuth();
@@ -149,7 +150,7 @@ export default function ManagerDashboard() {
                       className="text-text-secondary hover:text-white"
                       onClick={() => window.location.href = `/edit-artist/${artist.id}`}
                     >
-                      <i className="fas fa-cog"></i>
+                      <Settings className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>

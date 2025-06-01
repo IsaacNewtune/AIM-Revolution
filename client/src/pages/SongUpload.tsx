@@ -103,6 +103,7 @@ export default function SongUpload() {
       releaseDate: "",
       language: "",
       primaryGenre: "",
+      targetArtistId: "",
       songs: [{ title: "", aiGenerator: "", hasExplicitLyrics: false, isInstrumental: false, price: "0.99" }],
       agreedToPromoServices: false,
       agreedToAIGuidelines: false,
@@ -164,6 +165,9 @@ export default function SongUpload() {
   });
 
   const onSubmit = (data: UploadFormData) => {
+    console.log("Form submission triggered with data:", data);
+    console.log("Form errors:", form.formState.errors);
+    
     // Validate that all required song files are uploaded
     const missingSongFiles = data.songs.map((_, index) => index).filter(index => !songFiles[index]);
     if (missingSongFiles.length > 0) {
