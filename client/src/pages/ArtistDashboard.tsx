@@ -94,34 +94,34 @@ export default function ArtistDashboard() {
       <Sidebar userType="artist" />
       
       {/* Main Content */}
-      <div className="ml-64 p-6">
+      <div className="lg:ml-64 p-4 lg:p-6">
         {/* Artist Profile Header */}
         <div 
-          className="relative mb-8 rounded-xl overflow-hidden"
+          className="relative mb-6 lg:mb-8 rounded-xl overflow-hidden"
           style={{
             background: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1571330735066-03aaa9429d89?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center'
           }}
         >
-          <div className="p-8">
-            <div className="flex items-end space-x-6">
+          <div className="p-4 lg:p-8">
+            <div className="flex flex-col sm:flex-row items-center sm:items-end space-y-4 sm:space-y-0 sm:space-x-6">
               <img 
                 src={user?.profileImageUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200"} 
                 alt="Artist Profile" 
-                className="w-32 h-32 rounded-full object-cover border-4 border-white" 
+                className="w-24 h-24 lg:w-32 lg:h-32 rounded-full object-cover border-4 border-white" 
               />
-              <div className="flex-1">
-                <h1 className="text-4xl font-bold mb-2">
+              <div className="flex-1 text-center sm:text-left">
+                <h1 className="text-2xl lg:text-4xl font-bold mb-2">
                   {artist?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'AI Artist'}
                 </h1>
                 <p className="text-text-secondary mb-2">{artist?.location || 'Location not set'}</p>
                 <p className="text-sm">Followers: {artist?.followers || 0}</p>
               </div>
-              <div className="ml-6">
+              <div className="w-full sm:w-auto sm:ml-6">
                 <Button 
                   onClick={() => window.location.href = '/upload'}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 text-lg"
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 lg:px-6 py-2 lg:py-3 text-base lg:text-lg w-full sm:w-auto"
                 >
                   Upload Music
                 </Button>
@@ -131,7 +131,7 @@ export default function ArtistDashboard() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
           <Card className="bg-card-bg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
