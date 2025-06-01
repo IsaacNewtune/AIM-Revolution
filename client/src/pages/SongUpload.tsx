@@ -124,6 +124,8 @@ export default function SongUpload() {
 
   const uploadMutation = useMutation({
     mutationFn: async (data: UploadFormData) => {
+      console.log("Creating FormData with:", data);
+      
       const formData = new FormData();
       
       // Add cover art if provided
@@ -141,7 +143,13 @@ export default function SongUpload() {
         ...data,
         targetArtistId: targetArtistId || data.targetArtistId || undefined
       };
+      
+      console.log("Metadata being sent:", uploadData);
       formData.append('metadata', JSON.stringify(uploadData));
+      
+      // Log FormData contents
+      console.log("FormData has metadata:", formData.has('metadata'));
+      console.log("FormData keys:", Array.from(formData.keys()));
       
       return apiRequest("POST", "/api/songs/upload", formData);
     },

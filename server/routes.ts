@@ -350,6 +350,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.userId;
       const user = await storage.getUser(userId);
+      
+      console.log("Upload request received");
+      console.log("req.body:", req.body);
+      console.log("req.body.metadata:", req.body.metadata);
+      console.log("req.files:", req.files);
+      
+      if (!req.body.metadata) {
+        return res.status(400).json({ message: "No metadata provided" });
+      }
+      
       const metadata = JSON.parse(req.body.metadata);
       
       let artist: any;
