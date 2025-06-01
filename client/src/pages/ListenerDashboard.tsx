@@ -7,12 +7,13 @@ import Sidebar from "@/components/Sidebar";
 import MusicPlayer from "@/components/MusicPlayer";
 import TipModal from "@/components/TipModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { Search, Menu, Home, Disc, List, Heart, Coins } from "lucide-react";
 import { Link } from "wouter";
 
 export default function ListenerDashboard() {
   const { user } = useAuth();
-  const [currentSong, setCurrentSong] = useState<any>(null);
+  const { playSong, currentSong } = useMusicPlayer();
   const [showTipModal, setShowTipModal] = useState(false);
   const [tipTarget, setTipTarget] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,7 +43,7 @@ export default function ListenerDashboard() {
   };
 
   const handlePlay = (song: any) => {
-    setCurrentSong(song);
+    playSong(song);
     // Record stream
     fetch('/api/streams', {
       method: 'POST',
@@ -223,7 +224,7 @@ export default function ListenerDashboard() {
       </div>
 
       {/* Music Player Bar */}
-      {currentSong && <MusicPlayer song={currentSong} onTip={handleTip} />}
+      {currentSong && <MusicPlayer />}
 
       {/* Tip Modal */}
       <TipModal
