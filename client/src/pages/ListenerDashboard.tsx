@@ -190,10 +190,10 @@ export default function ListenerDashboard() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="w-8 h-8 bg-white text-black rounded-full hover:bg-gray-200 transition-colors"
                   onClick={() => handlePlay(song)}
                 >
-                  <i className="fas fa-play text-white"></i>
+                  <i className="fas fa-play"></i>
                 </Button>
                 <img 
                   src={song.coverArtUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"} 
