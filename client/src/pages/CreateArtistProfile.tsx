@@ -103,20 +103,20 @@ export default function CreateArtistProfile() {
     <div className="min-h-screen bg-dark-bg text-white">
       <Sidebar userType="manager" />
       
-      <div className="ml-64 p-6">
+      <div className="lg:ml-64 p-4 lg:p-6">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 lg:mb-8">
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => setLocation('/manager')}
-              className="border-gray-600 text-white hover:bg-gray-800"
+              className="border-gray-600 text-white hover:bg-gray-800 w-full sm:w-auto"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Button>
-            <h1 className="text-3xl font-bold">Create Artist Profile</h1>
+            <h1 className="text-2xl lg:text-3xl font-bold">Create Artist Profile</h1>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
