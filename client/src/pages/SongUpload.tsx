@@ -151,7 +151,19 @@ export default function SongUpload() {
       console.log("FormData has metadata:", formData.has('metadata'));
       console.log("FormData keys:", Array.from(formData.keys()));
       
-      return apiRequest("POST", "/api/songs/upload", formData);
+      // Use fetch directly for file uploads instead of apiRequest
+      const response = await fetch("/api/songs/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`${response.status}: ${errorText}`);
+      }
+      
+      return response;
     },
     onSuccess: () => {
       toast({
