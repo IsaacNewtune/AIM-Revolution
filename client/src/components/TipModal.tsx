@@ -30,7 +30,8 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
 
   const tipMutation = useMutation({
     mutationFn: async (tipData: any) => {
-      return await apiRequest("POST", "/api/tips", tipData);
+      // Don't actually send the request since payment processing isn't set up
+      throw new Error("Payment processing is not yet available. Tip functionality will be added soon.");
     },
     onSuccess: () => {
       toast({ title: "Success", description: "Tip sent successfully!" });
@@ -42,7 +43,7 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
     },
     onError: (error: Error) => {
       toast({ 
-        title: "Tip Failed", 
+        title: "Payment Setup Required", 
         description: error.message,
         variant: "destructive" 
       });
@@ -269,9 +270,11 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
               variant="outline"
               className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
               onClick={() => {
-                // Add $5 credits logic here
-                setShowFundingModal(false);
-                toast({ title: "Credits Added", description: "$5.00 added to your account" });
+                toast({ 
+                  title: "Payment Setup Required", 
+                  description: "Credit purchasing is not yet available. Payment processing will be added soon.",
+                  variant: "destructive"
+                });
               }}
             >
               <div className="text-lg font-bold">$5</div>
@@ -281,9 +284,11 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
               variant="outline"
               className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
               onClick={() => {
-                // Add $10 credits logic here
-                setShowFundingModal(false);
-                toast({ title: "Credits Added", description: "$10.00 added to your account" });
+                toast({ 
+                  title: "Payment Setup Required", 
+                  description: "Credit purchasing is not yet available. Payment processing will be added soon.",
+                  variant: "destructive"
+                });
               }}
             >
               <div className="text-lg font-bold">$10</div>
@@ -293,9 +298,11 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
               variant="outline"
               className="p-3 bg-dark-bg hover:bg-gray-700 transition-colors text-center flex flex-col"
               onClick={() => {
-                // Add $20 credits logic here
-                setShowFundingModal(false);
-                toast({ title: "Credits Added", description: "$20.00 added to your account" });
+                toast({ 
+                  title: "Payment Setup Required", 
+                  description: "Credit purchasing is not yet available. Payment processing will be added soon.",
+                  variant: "destructive"
+                });
               }}
             >
               <div className="text-lg font-bold">$20</div>
@@ -321,9 +328,11 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
             <Button
               className="w-full mt-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
               onClick={() => {
-                // Add custom amount logic here
-                setShowFundingModal(false);
-                toast({ title: "Credits Added", description: "Custom amount added to your account" });
+                toast({ 
+                  title: "Payment Setup Required", 
+                  description: "Credit purchasing is not yet available. Payment processing will be added soon.",
+                  variant: "destructive"
+                });
               }}
             >
               Add Credits
