@@ -34,14 +34,14 @@ const upload = multer({
     fileSize: 50 * 1024 * 1024, // 50MB limit
   },
   fileFilter: (req, file, cb) => {
-    if (file.fieldname === 'audio') {
+    if (file.fieldname === 'audio' || file.fieldname.startsWith('songFile_')) {
       const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/flac'];
       if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
       } else {
         cb(new Error('Invalid audio file type'));
       }
-    } else if (file.fieldname === 'artwork' || file.fieldname === 'profileImage' || file.fieldname === 'bannerImage') {
+    } else if (file.fieldname === 'artwork' || file.fieldname === 'coverArt' || file.fieldname === 'profileImage' || file.fieldname === 'bannerImage') {
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
       if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
