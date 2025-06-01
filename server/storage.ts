@@ -373,14 +373,35 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllSongs(filters?: { search?: string; genre?: string; sortBy?: string; limit?: number }): Promise<Song[]> {
-    // For now, implement basic filtering - will enhance with proper SQL later
-    let allSongs = await db.select().from(songs).where(eq(songs.isPublished, true)).orderBy(desc(songs.createdAt));
+    // Use proper SQL join to include artist information
+    const query = db
+      .select({
+        id: songs.id,
+        artistId: songs.artistId,
+        title: songs.title,
+        description: songs.description,
+        fileUrl: songs.fileUrl,
+        coverArtUrl: songs.coverArtUrl,
+        duration: songs.duration,
+        aiGenerationMethod: songs.aiGenerationMethod,
+        streamCount: songs.streamCount,
+        revenue: songs.revenue,
+        isPublished: songs.isPublished,
+        createdAt: songs.createdAt,
+        artistName: artists.name
+      })
+      .from(songs)
+      .innerJoin(artists, eq(songs.artistId, artists.id))
+      .where(eq(songs.isPublished, true));
+
+    let allSongs = await query.orderBy(desc(songs.createdAt));
     
-    if (filters?.search) {
-      const searchTerm = filters.search.toLowerCase();
+    if (filters?.search && filters.search.trim()) {
+      const searchTerm = filters.search.toLowerCase().trim();
       allSongs = allSongs.filter(song => 
         song.title?.toLowerCase().includes(searchTerm) || 
-        song.description?.toLowerCase().includes(searchTerm)
+        song.description?.toLowerCase().includes(searchTerm) ||
+        song.artistName?.toLowerCase().includes(searchTerm)
       );
     }
     
@@ -392,7 +413,7 @@ export class DatabaseStorage implements IStorage {
       allSongs = allSongs.slice(0, filters.limit);
     }
     
-    return allSongs;
+    return allSongs as Song[];
   }
 
   async getTrendingSongs(): Promise<Song[]> {

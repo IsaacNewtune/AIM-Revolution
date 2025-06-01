@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
-import { pool } from "./db";
+import { pool, db } from "./db";
 import { 
   insertSongSchema, 
   insertTipSchema, 
@@ -15,8 +15,11 @@ import {
   insertArtistSchema,
   insertSongCommentSchema,
   insertSongReviewSchema,
-  insertArtistReviewSchema
+  insertArtistReviewSchema,
+  songs,
+  artists
 } from "@shared/schema";
+import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
 
 // Configure multer for file uploads
@@ -466,6 +469,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching songs:", error);
       res.status(500).json({ message: "Failed to fetch songs" });
+    }
+  });
+
+  app.get('/api/search/suggestions', async (req, res) => {
+    try {
+      const { query } = req.query;
+      if (!query || typeof query !== 'string' || query.trim().length < 2) {
+        return res.json({ artists: [], songs: [] });
+      }
+
+      const searchTerm = query.toLowerCase().trim();
+      
+      // Get matching artists
+      const artists = await db
+        .select({ id: artists.id, name: artists.name })
+        .from(artists)
+        .where(sql`LOWER(${artists.name}) LIKE ${`%${searchTerm}%`}`)
+        .limit(5);
+
+      // Get matching songs with artist info
+      const songs = await db
+        .select({
+          id: songs.id,
+          title: songs.title,
+          artistName: artists.name
+        })
+        .from(songs)
+        .innerJoin(artists, eq(songs.artistId, artists.id))
+        .where(
+          and(
+            eq(songs.isPublished, true),
+            sql`LOWER(${songs.title}) LIKE ${`%${searchTerm}%`}`
+          )
+        )
+        .limit(5);
+
+      res.json({ artists, songs });
+    } catch (error) {
+      console.error("Error fetching search suggestions:", error);
+      res.status(500).json({ message: "Failed to fetch suggestions" });
     }
   });
 

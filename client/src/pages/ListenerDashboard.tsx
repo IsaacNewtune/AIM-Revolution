@@ -16,12 +16,13 @@ export default function ListenerDashboard() {
   const [tipTarget, setTipTarget] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Debounce search query to prevent keyboard issues
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-    }, 500);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
