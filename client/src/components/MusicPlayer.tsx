@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Shuffle, Repeat, List, ChevronUp } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Shuffle, Repeat, List, ChevronUp, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
@@ -15,37 +15,38 @@ export default function MusicPlayer() {
   const {
     currentSong,
     isPlaying,
-    currentTime,
-    duration,
     volume,
     isMuted,
+    currentTime,
+    duration,
     queue,
     currentIndex,
     togglePlay,
-    next,
     previous,
-    seek,
+    next,
     setVolume,
     toggleMute,
+    seekTo
   } = useMusicPlayer();
 
-  const [showQueue, setShowQueue] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [dragY, setDragY] = useState(0);
+  const [showQueue, setShowQueue] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragY, setDragY] = useState(0);
   const startY = useRef(0);
 
   const handleSeek = (value: number[]) => {
-    seek(value[0]);
+    seekTo(value[0]);
   };
 
   const handleVolumeChange = (value: number[]) => {
     setVolume(value[0]);
   };
 
-  // Drag handlers for mobile touch events
+  // Improved touch handlers for iPad/iOS compatibility
   const handleTouchStart = (e: React.TouchEvent) => {
     console.log('Touch start detected');
+    e.preventDefault(); // Prevent iOS scroll behavior
     setIsDragging(true);
     startY.current = e.touches[0].clientY;
     setDragY(0);
@@ -54,23 +55,22 @@ export default function MusicPlayer() {
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
     
+    e.preventDefault(); // Prevent iOS scroll behavior
     const currentY = e.touches[0].clientY;
     const deltaY = startY.current - currentY;
     console.log('Touch move:', deltaY);
     setDragY(deltaY);
-    
-    // Prevent scrolling while dragging
-    e.preventDefault();
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     if (!isDragging) return;
     
+    e.preventDefault(); // Prevent iOS scroll behavior
     console.log('Touch end, dragY:', dragY);
     setIsDragging(false);
     
-    // If dragged up more than 50px, expand
-    if (dragY > 50) {
+    // If dragged up more than 30px (reduced threshold for easier expansion), expand
+    if (dragY > 30) {
       console.log('Expanding player');
       setIsExpanded(true);
     }
@@ -80,6 +80,7 @@ export default function MusicPlayer() {
 
   // Mouse handlers for desktop
   const handleMouseDown = (e: React.MouseEvent) => {
+    console.log('Mouse down detected');
     setIsDragging(true);
     startY.current = e.clientY;
     setDragY(0);
@@ -90,338 +91,310 @@ export default function MusicPlayer() {
     
     const currentY = e.clientY;
     const deltaY = startY.current - currentY;
+    console.log('Mouse move:', deltaY);
     setDragY(deltaY);
   };
 
   const handleMouseUp = () => {
     if (!isDragging) return;
     
+    console.log('Mouse up, dragY:', dragY);
     setIsDragging(false);
     
-    // If dragged up more than 50px, expand
-    if (dragY > 50) {
+    // If dragged up more than 30px, expand
+    if (dragY > 30) {
+      console.log('Expanding player');
       setIsExpanded(true);
     }
     
     setDragY(0);
   };
 
-  // Add mouse event listeners
+  // Add mouse event listeners for desktop
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
     }
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, dragY]);
+  }, [isDragging]);
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  if (!currentSong) {
+    return null;
+  }
 
-  if (!currentSong) return null;
+  if (isExpanded) {
+    return (
+      <div className="fixed inset-0 bg-gradient-to-b from-purple-900/95 via-black/95 to-black/95 backdrop-blur-lg z-50 flex flex-col">
+        {/* Header with Close Button */}
+        <div className="flex items-center justify-between p-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsExpanded(false)}
+            className="text-white hover:bg-white/20"
+          >
+            <ChevronUp className="w-6 h-6 rotate-180" />
+          </Button>
+        </div>
 
-  return (
-    <>
-      {/* Expanded Player Modal */}
-      {isExpanded && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-lg z-50 flex flex-col">
-          {/* Drag Handle */}
-          <div className="w-full flex justify-center py-4">
-            <button
-              onClick={() => setIsExpanded(false)}
-              className="w-12 h-1.5 bg-gray-400 rounded-full hover:bg-gray-300 transition-colors"
+        {/* Expanded Player Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-8 pb-24">
+          {/* Large Album Art */}
+          <div className="w-80 h-80 rounded-2xl overflow-hidden bg-primary/20 mb-8 shadow-2xl">
+            {(currentSong?.coverArtUrl || currentSong?.cover_art_url) ? (
+              <img 
+                src={currentSong.coverArtUrl || currentSong.cover_art_url} 
+                alt={currentSong?.title || 'Song artwork'}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Play className="w-24 h-24 text-primary" />
+              </div>
+            )}
+          </div>
+
+          {/* Song Info */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">{currentSong?.title}</h1>
+            <p className="text-xl text-text-secondary">{currentSong?.artistName || currentSong?.artist_name}</p>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="w-full max-w-md mb-8">
+            <div className="flex items-center justify-between text-sm text-text-secondary mb-2">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+            <Slider
+              value={[currentTime]}
+              max={duration || 1}
+              step={1}
+              onValueChange={handleSeek}
+              className="w-full"
             />
           </div>
-          
-          {/* Expanded Player Content */}
-          <div className="flex-1 flex flex-col items-center justify-center px-8 pb-24">
-            {/* Large Album Art */}
-            <div className="w-80 h-80 rounded-2xl overflow-hidden bg-primary/20 mb-8 shadow-2xl">
-              {(currentSong?.coverArtUrl || currentSong?.cover_art_url) ? (
-                <img 
-                  src={currentSong.coverArtUrl || currentSong.cover_art_url} 
-                  alt={currentSong?.title || 'Song artwork'}
-                  className="w-full h-full object-cover"
-                />
+
+          {/* Large Player Controls */}
+          <div className="flex items-center gap-8 mb-8">
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={previous}
+              disabled={currentIndex === 0}
+              className="text-white hover:bg-white/20 disabled:opacity-50"
+            >
+              <SkipBack className="w-8 h-8" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={togglePlay}
+              className="w-20 h-20 rounded-full bg-primary hover:bg-primary/80 text-primary-foreground"
+            >
+              {isPlaying ? (
+                <Pause className="w-10 h-10" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Play className="w-24 h-24 text-primary" />
-                </div>
+                <Play className="w-10 h-10 ml-1" />
               )}
-            </div>
+            </Button>
 
-            {/* Song Info */}
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-white mb-2">{currentSong?.title}</h1>
-              <p className="text-xl text-text-secondary">{currentSong?.artistName || currentSong?.artist_name}</p>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="w-full max-w-md mb-8">
-              <div className="flex items-center gap-4 mb-2">
-                <span className="text-sm text-text-secondary min-w-[40px]">
-                  {formatTime(currentTime)}
-                </span>
-                <Slider
-                  value={[currentTime]}
-                  max={duration || 100}
-                  step={1}
-                  onValueChange={handleSeek}
-                  className="flex-1"
-                />
-                <span className="text-sm text-text-secondary min-w-[40px]">
-                  {formatTime(duration)}
-                </span>
-              </div>
-            </div>
-
-            {/* Player Controls */}
-            <div className="flex items-center gap-6 mb-8">
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={previous}
-                disabled={currentIndex === 0}
-                className="text-white hover:text-primary"
-              >
-                <SkipBack className="w-8 h-8" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={togglePlay}
-                className="text-white hover:text-primary w-16 h-16 rounded-full bg-primary/20"
-              >
-                {isPlaying ? (
-                  <Pause className="w-10 h-10" />
-                ) : (
-                  <Play className="w-10 h-10" />
-                )}
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={next}
-                disabled={currentIndex >= queue.length - 1}
-                className="text-white hover:text-primary"
-              >
-                <SkipForward className="w-8 h-8" />
-              </Button>
-            </div>
-
-            {/* Volume Control */}
-            <div className="flex items-center gap-4 w-full max-w-xs">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleMute}
-                className="text-white hover:text-primary"
-              >
-                {isMuted ? (
-                  <VolumeX className="w-5 h-5" />
-                ) : (
-                  <Volume2 className="w-5 h-5" />
-                )}
-              </Button>
-              
-              <Slider
-                value={[isMuted ? 0 : volume]}
-                max={1}
-                step={0.01}
-                onValueChange={handleVolumeChange}
-                className="flex-1"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Player Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card-bg border-t border-card-border backdrop-blur-md z-50">
-        {/* Drag Handle */}
-        <div className="w-full flex justify-center py-2">
-          <div
-            className="w-12 h-1.5 bg-gray-500 rounded-full hover:bg-gray-400 transition-colors cursor-pointer select-none"
-            style={{
-              transform: isDragging ? `translateY(-${Math.min(dragY, 100)}px)` : 'none',
-              opacity: isDragging ? 0.8 : 1
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            onMouseDown={handleMouseDown}
-            onClick={() => !isDragging && setIsExpanded(true)}
-            aria-label="Drag up to expand player"
-          />
-        </div>
-        
-        <div className="flex items-center justify-between px-4 py-3 max-w-full">
-          {/* Song Info */}
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-12 h-12 rounded-lg overflow-hidden bg-primary/20 flex-shrink-0">
-              {(currentSong?.coverArtUrl || currentSong?.cover_art_url) ? (
-                <img 
-                  src={currentSong.coverArtUrl || currentSong.cover_art_url} 
-                  alt={currentSong?.title || 'Song artwork'}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Play className="w-6 h-6 text-primary" />
-                </div>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <h4 className="text-sm font-medium text-white truncate">{currentSong?.title}</h4>
-              <p className="text-xs text-text-secondary truncate">{currentSong?.artistName || currentSong?.artist_name}</p>
-            </div>
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={next}
+              disabled={currentIndex === queue.length - 1}
+              className="text-white hover:bg-white/20 disabled:opacity-50"
+            >
+              <SkipForward className="w-8 h-8" />
+            </Button>
           </div>
 
-          {/* Player Controls */}
-          <div className="flex flex-col items-center gap-2 flex-1 max-w-md">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={previous}
-                disabled={currentIndex === 0}
-                className="text-white hover:text-primary"
-              >
-                <SkipBack className="w-4 h-4" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={togglePlay}
-                className="text-white hover:text-primary w-10 h-10 rounded-full bg-primary/20"
-              >
-                {isPlaying ? (
-                  <Pause className="w-5 h-5" />
-                ) : (
-                  <Play className="w-5 h-5" />
-                )}
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={next}
-                disabled={currentIndex >= queue.length - 1}
-                className="text-white hover:text-primary"
-              >
-                <SkipForward className="w-4 h-4" />
-              </Button>
-            </div>
+          {/* Additional Controls */}
+          <div className="flex items-center gap-6">
+            {/* Tip Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/20"
+            >
+              <Heart className="w-5 h-5 mr-2" />
+              Tip Artist
+            </Button>
 
-            {/* Progress Bar */}
-            <div className="flex items-center gap-2 w-full">
-              <span className="text-xs text-text-secondary min-w-[35px]">
-                {formatTime(currentTime)}
-              </span>
-              <Slider
-                value={[currentTime]}
-                max={duration || 100}
-                step={1}
-                onValueChange={handleSeek}
-                className="flex-1"
-              />
-              <span className="text-xs text-text-secondary min-w-[35px]">
-                {formatTime(duration)}
-              </span>
-            </div>
-          </div>
-
-          {/* Volume & Queue Controls */}
-          <div className="flex items-center gap-2 flex-1 justify-end">
+            {/* Queue Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowQueue(!showQueue)}
-              className="text-white hover:text-primary"
+              className="text-white hover:bg-white/20"
             >
-              <List className="w-4 h-4" />
+              <List className="w-5 h-5" />
             </Button>
-            
+
+            {/* Volume Control */}
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleMute}
-                className="text-white hover:text-primary"
+                className="text-white hover:bg-white/20"
               >
-                {isMuted ? (
-                  <VolumeX className="w-4 h-4" />
-                ) : (
-                  <Volume2 className="w-4 h-4" />
-                )}
+                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </Button>
-              
-              <Slider
-                value={[isMuted ? 0 : volume]}
-                max={1}
-                step={0.01}
-                onValueChange={handleVolumeChange}
-                className="w-24"
-              />
+              <div className="w-24">
+                <Slider
+                  value={[isMuted ? 0 : volume]}
+                  max={1}
+                  step={0.01}
+                  onValueChange={handleVolumeChange}
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Queue Panel */}
+        {showQueue && (
+          <div className="absolute right-0 top-0 bottom-0 w-80 bg-black/90 backdrop-blur-lg border-l border-white/20 overflow-y-auto">
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">Queue</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowQueue(false)}
+                  className="text-white hover:bg-white/20"
+                >
+                  ×
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {queue.map((song: any, index: number) => (
+                  <div
+                    key={song.id}
+                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                      index === currentIndex 
+                        ? 'bg-primary/20 text-primary' 
+                        : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="font-medium truncate">{song.title}</div>
+                    <div className="text-sm text-text-secondary truncate">
+                      {song.artistName || song.artist_name}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Compact Player Bar
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-lg border-t border-white/20 z-40">
+      {/* Drag Handle */}
+      <div
+        className={`w-full h-2 flex items-center justify-center cursor-pointer transition-all duration-200 ${
+          isDragging ? `transform translate-y-${Math.min(dragY, 100)}` : ''
+        } ${isDragging ? 'bg-primary/30' : 'hover:bg-white/10'}`}
+        style={{
+          transform: isDragging ? `translateY(-${Math.min(dragY, 100)}px)` : 'translateY(0)',
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onClick={() => !isDragging && setIsExpanded(true)}
+      >
+        <div className="w-12 h-1 bg-white/40 rounded-full"></div>
+      </div>
+
+      {/* Compact Player Content */}
+      <div className="flex items-center justify-between px-4 py-3 max-w-full">
+        {/* Song Info */}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="w-12 h-12 rounded-lg overflow-hidden bg-primary/20 flex-shrink-0">
+            {(currentSong?.coverArtUrl || currentSong?.cover_art_url) ? (
+              <img 
+                src={currentSong.coverArtUrl || currentSong.cover_art_url} 
+                alt={currentSong?.title || 'Song artwork'}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Play className="w-6 h-6 text-primary" />
+              </div>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h4 className="text-sm font-medium text-white truncate">{currentSong?.title}</h4>
+            <p className="text-xs text-text-secondary truncate">{currentSong?.artistName || currentSong?.artist_name}</p>
+          </div>
+        </div>
+
+        {/* Player Controls */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={previous}
+            disabled={currentIndex === 0}
+            className="text-white hover:bg-white/20 disabled:opacity-50"
+          >
+            <SkipBack className="w-4 h-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={togglePlay}
+            className="w-10 h-10 rounded-full bg-primary hover:bg-primary/80 text-primary-foreground"
+          >
+            {isPlaying ? (
+              <Pause className="w-4 h-4" />
+            ) : (
+              <Play className="w-4 h-4 ml-0.5" />
+            )}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={next}
+            disabled={currentIndex === queue.length - 1}
+            className="text-white hover:bg-white/20 disabled:opacity-50"
+          >
+            <SkipForward className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
-      {/* Queue Panel */}
-      {showQueue && (
-        <div className="fixed bottom-16 right-4 w-80 max-h-96 bg-card-bg border border-card-border rounded-lg shadow-lg overflow-hidden z-50">
-          <div className="p-4 border-b border-card-border">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-white">Queue</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowQueue(false)}
-                className="text-text-secondary hover:text-white"
-              >
-                ×
-              </Button>
-            </div>
-          </div>
-          
-          <div className="overflow-y-auto max-h-64">
-            {queue.map((song, index) => (
-              <div
-                key={`${song.id}-${index}`}
-                className={`flex items-center gap-3 p-3 hover:bg-card-hover transition-colors ${
-                  index === currentIndex ? 'bg-primary/10 border-l-2 border-primary' : ''
-                }`}
-              >
-                <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  {song.cover_art_url ? (
-                    <img 
-                      src={song.cover_art_url} 
-                      alt={song.title}
-                      className="w-full h-full object-cover rounded"
-                    />
-                  ) : (
-                    <Play className="w-4 h-4 text-primary" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-white truncate">{song.title}</p>
-                  <p className="text-xs text-text-secondary truncate">{song.artist_name}</p>
-                </div>
-                {index === currentIndex && (
-                  <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
-                )}
-              </div>
-            ))}
-          </div>
+      {/* Mini Progress Bar */}
+      <div className="px-4 pb-2">
+        <div className="flex items-center gap-2 text-xs text-text-secondary mb-1">
+          <span>{formatTime(currentTime)}</span>
+          <span className="flex-1"></span>
+          <span>{formatTime(duration)}</span>
         </div>
-      )}
-    </>
+        <Slider
+          value={[currentTime]}
+          max={duration || 1}
+          step={1}
+          onValueChange={handleSeek}
+          className="w-full h-1"
+        />
+      </div>
+    </div>
   );
 }
