@@ -89,6 +89,10 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
         console.log('Loading audio:', audioSrc);
         audioRef.current.src = audioSrc;
         audioRef.current.load();
+        // Auto-play when a new song is loaded
+        audioRef.current.addEventListener('loadeddata', () => {
+          audioRef.current.play().catch(console.error);
+        }, { once: true });
       }
     }
   }, [currentSong]);
