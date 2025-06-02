@@ -1,192 +1,213 @@
-import { createContext, useContext, useState, useRef, useEffect, ReactNode } from "react";
-import { Song } from "@shared/schema";
+import { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
+
+interface Song {
+  id: string;
+  title: string;
+  artist_name: string;
+  audio_url?: string;
+  cover_image_url?: string;
+  duration?: number;
+}
 
 interface MusicPlayerContextType {
+  // Current state
   currentSong: Song | null;
   isPlaying: boolean;
   currentTime: number;
   duration: number;
   volume: number;
+  isMuted: boolean;
+  
+  // Queue management
   queue: Song[];
   currentIndex: number;
-  playSong: (song: Song, queue?: Song[]) => void;
+  
+  // Player controls
+  play: (song?: Song) => void;
+  pause: () => void;
   togglePlay: () => void;
-  nextSong: () => void;
-  previousSong: () => void;
-  seekTo: (time: number) => void;
+  next: () => void;
+  previous: () => void;
+  seek: (time: number) => void;
   setVolume: (volume: number) => void;
+  toggleMute: () => void;
+  
+  // Queue controls
   addToQueue: (song: Song) => void;
+  playNext: (song: Song) => void;
   removeFromQueue: (index: number) => void;
+  clearQueue: () => void;
+  playQueue: (songs: Song[], startIndex?: number) => void;
 }
 
-const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
+const MusicPlayerContext = createContext<MusicPlayerContextType | null>(null);
 
-interface MusicPlayerProviderProps {
-  children: ReactNode;
-}
-
-export function MusicPlayerProvider({ children }: MusicPlayerProviderProps) {
+export function MusicPlayerProvider({ children }: { children: ReactNode }) {
+  const audioRef = useRef<HTMLAudioElement>(new Audio());
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolumeState] = useState(70);
+  const [volume, setVolumeState] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
   const [queue, setQueue] = useState<Song[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Initialize audio element
+  // Audio event listeners
   useEffect(() => {
-    if (!audioRef.current) {
-      const audio = new Audio();
-      audio.volume = volume / 100;
-      audioRef.current = audio;
-    }
-
     const audio = audioRef.current;
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleDurationChange = () => setDuration(audio.duration || 0);
-    const handleEnded = () => {
-      setIsPlaying(false);
-      nextSong();
-    };
-    const handleCanPlay = () => {
-      if (isPlaying) {
-        audio.play().catch(console.error);
-      }
-    };
+    const handleDurationChange = () => setDuration(audio.duration);
+    const handleEnded = () => next();
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('durationchange', handleDurationChange);
-    audio.addEventListener('loadedmetadata', handleDurationChange);
     audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('durationchange', handleDurationChange);
-      audio.removeEventListener('loadedmetadata', handleDurationChange);
       audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
     };
-  }, [isPlaying]);
+  }, []);
 
   // Update audio source when current song changes
   useEffect(() => {
-    if (currentSong && audioRef.current) {
-      audioRef.current.src = currentSong.fileUrl;
+    if (currentSong?.audio_url) {
+      audioRef.current.src = currentSong.audio_url;
       audioRef.current.load();
-      setCurrentTime(0);
     }
   }, [currentSong]);
 
-  // Update volume
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
+  const play = (song?: Song) => {
+    if (song) {
+      setCurrentSong(song);
+      // Add to queue if not already there
+      if (!queue.find(q => q.id === song.id)) {
+        setQueue(prev => [...prev, song]);
+        setCurrentIndex(queue.length);
+      } else {
+        setCurrentIndex(queue.findIndex(q => q.id === song.id));
+      }
     }
-  }, [volume]);
+    audioRef.current.play().catch(console.error);
+  };
 
-  const playSong = (song: Song, newQueue?: Song[]) => {
-    if (newQueue) {
-      setQueue(newQueue);
-      const songIndex = newQueue.findIndex(s => s.id === song.id);
-      setCurrentIndex(songIndex !== -1 ? songIndex : 0);
-    }
-    
-    setCurrentSong(song);
-    setIsPlaying(true);
-
-    // Record stream when song starts playing
-    if (audioRef.current) {
-      fetch('/api/streams/record', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ songId: song.id })
-      }).catch(console.error);
-    }
+  const pause = () => {
+    audioRef.current.pause();
   };
 
   const togglePlay = () => {
-    if (!audioRef.current || !currentSong) return;
-
     if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
+      pause();
     } else {
-      audioRef.current.play().catch(console.error);
-      setIsPlaying(true);
+      play();
     }
   };
 
-  const nextSong = () => {
-    if (queue.length === 0) return;
-    
-    const nextIndex = (currentIndex + 1) % queue.length;
-    setCurrentIndex(nextIndex);
-    playSong(queue[nextIndex]);
-  };
-
-  const previousSong = () => {
-    if (queue.length === 0) return;
-    
-    const prevIndex = currentIndex === 0 ? queue.length - 1 : currentIndex - 1;
-    setCurrentIndex(prevIndex);
-    playSong(queue[prevIndex]);
-  };
-
-  const seekTo = (time: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
-      setCurrentTime(time);
+  const next = () => {
+    if (currentIndex < queue.length - 1) {
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      setCurrentSong(queue[nextIndex]);
     }
+  };
+
+  const previous = () => {
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1;
+      setCurrentIndex(prevIndex);
+      setCurrentSong(queue[prevIndex]);
+    }
+  };
+
+  const seek = (time: number) => {
+    audioRef.current.currentTime = time;
+    setCurrentTime(time);
   };
 
   const setVolume = (newVolume: number) => {
+    audioRef.current.volume = newVolume;
     setVolumeState(newVolume);
+    setIsMuted(newVolume === 0);
+  };
+
+  const toggleMute = () => {
+    if (isMuted) {
+      audioRef.current.volume = volume;
+      setIsMuted(false);
+    } else {
+      audioRef.current.volume = 0;
+      setIsMuted(true);
+    }
   };
 
   const addToQueue = (song: Song) => {
     setQueue(prev => [...prev, song]);
   };
 
+  const playNext = (song: Song) => {
+    const nextIndex = currentIndex + 1;
+    setQueue(prev => [
+      ...prev.slice(0, nextIndex),
+      song,
+      ...prev.slice(nextIndex)
+    ]);
+  };
+
   const removeFromQueue = (index: number) => {
     setQueue(prev => prev.filter((_, i) => i !== index));
-    if (index < currentIndex) {
+    if (index <= currentIndex && currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
-    } else if (index === currentIndex && queue.length > 1) {
-      // If removing current song, play next or previous
-      const newIndex = index >= queue.length - 1 ? index - 1 : index;
-      setCurrentIndex(newIndex);
-      if (queue[newIndex]) {
-        playSong(queue[newIndex]);
-      }
     }
   };
 
-  const value: MusicPlayerContextType = {
-    currentSong,
-    isPlaying,
-    currentTime,
-    duration,
-    volume,
-    queue,
-    currentIndex,
-    playSong,
-    togglePlay,
-    nextSong,
-    previousSong,
-    seekTo,
-    setVolume,
-    addToQueue,
-    removeFromQueue,
+  const clearQueue = () => {
+    setQueue([]);
+    setCurrentIndex(0);
+    setCurrentSong(null);
+    pause();
+  };
+
+  const playQueue = (songs: Song[], startIndex = 0) => {
+    setQueue(songs);
+    setCurrentIndex(startIndex);
+    setCurrentSong(songs[startIndex]);
   };
 
   return (
-    <MusicPlayerContext.Provider value={value}>
+    <MusicPlayerContext.Provider
+      value={{
+        currentSong,
+        isPlaying,
+        currentTime,
+        duration,
+        volume,
+        isMuted,
+        queue,
+        currentIndex,
+        play,
+        pause,
+        togglePlay,
+        next,
+        previous,
+        seek,
+        setVolume,
+        toggleMute,
+        addToQueue,
+        playNext,
+        removeFromQueue,
+        clearQueue,
+        playQueue,
+      }}
+    >
       {children}
     </MusicPlayerContext.Provider>
   );
@@ -194,7 +215,7 @@ export function MusicPlayerProvider({ children }: MusicPlayerProviderProps) {
 
 export function useMusicPlayer() {
   const context = useContext(MusicPlayerContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useMusicPlayer must be used within a MusicPlayerProvider');
   }
   return context;
