@@ -3,6 +3,7 @@ import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Shuffle, Repeat, 
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import { useToast } from '@/hooks/use-toast';
 
 function formatTime(seconds: number): string {
   if (isNaN(seconds)) return '0:00';
@@ -35,6 +36,15 @@ export default function MusicPlayer() {
   const [dragY, setDragY] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const startY = useRef(0);
+  const { toast } = useToast();
+
+  const handleTipAttempt = (amount: string) => {
+    toast({
+      title: "Insufficient Funds",
+      description: "You need to add credits to your account to tip artists. Please visit your account settings to add funds.",
+      variant: "destructive",
+    });
+  };
 
   const handleSeek = (value: number[]) => {
     seek(value[0]);
@@ -71,16 +81,16 @@ export default function MusicPlayer() {
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (!isDragging) return;
     
-    console.log('Touch end, final dragY:', dragY);
+    const finalDragY = dragY;
+    console.log('Touch end, final dragY:', finalDragY);
     setIsDragging(false);
+    setDragY(0);
     
     // Even lower threshold - 15px for iPad sensitivity
-    if (dragY > 15) {
+    if (finalDragY > 15) {
       console.log('Expanding player via touch drag');
       setIsExpanded(true);
     }
-    
-    setDragY(0);
   };
 
   // Mouse handlers for desktop
@@ -267,23 +277,23 @@ export default function MusicPlayer() {
 
           {/* Tip Section */}
           <div id="tip-section" className="w-full max-w-md bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-            <h3 className="text-lg font-semibold text-white mb-4 text-center">Support the Artist</h3>
+            <h3 className="text-lg font-semibold text-white mb-4 text-center">Support {currentSong?.artistName || currentSong?.artist_name}</h3>
             <div className="grid grid-cols-3 gap-3 mb-4">
               <Button 
                 className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={() => console.log('Tip $1')}
+                onClick={() => handleTipAttempt('1')}
               >
                 $1
               </Button>
               <Button 
                 className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={() => console.log('Tip $5')}
+                onClick={() => handleTipAttempt('5')}
               >
                 $5
               </Button>
               <Button 
                 className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={() => console.log('Tip $10')}
+                onClick={() => handleTipAttempt('10')}
               >
                 $10
               </Button>
@@ -291,7 +301,7 @@ export default function MusicPlayer() {
             <Button 
               variant="outline" 
               className="w-full border-white/30 text-white hover:bg-white/10"
-              onClick={() => console.log('Custom tip amount')}
+              onClick={() => handleTipAttempt('custom')}
             >
               Custom Amount
             </Button>
