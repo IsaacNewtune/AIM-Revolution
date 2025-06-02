@@ -35,8 +35,6 @@ export default function MusicPlayer() {
   const [isDragging, setIsDragging] = useState(false);
   const startY = useRef(0);
 
-  if (!currentSong) return null;
-
   const handleSeek = (value: number[]) => {
     seek(value[0]);
   };
@@ -119,6 +117,8 @@ export default function MusicPlayer() {
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
+  if (!currentSong) return null;
+
   return (
     <>
       {/* Expanded Player Modal */}
@@ -136,10 +136,10 @@ export default function MusicPlayer() {
           <div className="flex-1 flex flex-col items-center justify-center px-8 pb-24">
             {/* Large Album Art */}
             <div className="w-80 h-80 rounded-2xl overflow-hidden bg-primary/20 mb-8 shadow-2xl">
-              {(currentSong.coverArtUrl || currentSong.cover_art_url) ? (
+              {(currentSong?.coverArtUrl || currentSong?.cover_art_url) ? (
                 <img 
                   src={currentSong.coverArtUrl || currentSong.cover_art_url} 
-                  alt={currentSong.title}
+                  alt={currentSong?.title || 'Song artwork'}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -151,8 +151,8 @@ export default function MusicPlayer() {
 
             {/* Song Info */}
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-white mb-2">{currentSong.title}</h1>
-              <p className="text-xl text-text-secondary">{currentSong.artistName || currentSong.artist_name}</p>
+              <h1 className="text-3xl font-bold text-white mb-2">{currentSong?.title}</h1>
+              <p className="text-xl text-text-secondary">{currentSong?.artistName || currentSong?.artist_name}</p>
             </div>
 
             {/* Progress Bar */}
@@ -260,10 +260,10 @@ export default function MusicPlayer() {
           {/* Song Info */}
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-12 h-12 rounded-lg overflow-hidden bg-primary/20 flex-shrink-0">
-              {(currentSong.coverArtUrl || currentSong.cover_art_url) ? (
+              {(currentSong?.coverArtUrl || currentSong?.cover_art_url) ? (
                 <img 
                   src={currentSong.coverArtUrl || currentSong.cover_art_url} 
-                  alt={currentSong.title}
+                  alt={currentSong?.title || 'Song artwork'}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -273,8 +273,8 @@ export default function MusicPlayer() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <h4 className="text-sm font-medium text-white truncate">{currentSong.title}</h4>
-              <p className="text-xs text-text-secondary truncate">{currentSong.artistName || currentSong.artist_name}</p>
+              <h4 className="text-sm font-medium text-white truncate">{currentSong?.title}</h4>
+              <p className="text-xs text-text-secondary truncate">{currentSong?.artistName || currentSong?.artist_name}</p>
             </div>
           </div>
 
