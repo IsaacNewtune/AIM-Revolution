@@ -93,8 +93,16 @@ export default function Discover() {
                 <Card key={song.id} className="bg-card-bg border-card-border hover:bg-card-hover transition-colors">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 bg-primary/20 rounded-lg flex items-center justify-center">
-                        <Music className="h-6 w-6 text-primary" />
+                      <div className="h-12 w-12 rounded-lg overflow-hidden bg-primary/20 flex items-center justify-center">
+                        {song.cover_image_url ? (
+                          <img 
+                            src={song.cover_image_url} 
+                            alt={song.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Music className="h-6 w-6 text-primary" />
+                        )}
                       </div>
                       <div className="flex-1">
                         <h4 className="font-semibold text-white">{song.title}</h4>
@@ -121,8 +129,16 @@ export default function Discover() {
                 <Card key={artist.id} className="bg-card-bg border-card-border hover:bg-card-hover transition-colors">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 bg-primary/20 rounded-lg flex items-center justify-center">
-                        <User className="h-6 w-6 text-primary" />
+                      <div className="h-12 w-12 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center">
+                        {artist.profile_image_url ? (
+                          <img 
+                            src={artist.profile_image_url} 
+                            alt={artist.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="h-6 w-6 text-primary" />
+                        )}
                       </div>
                       <div className="flex-1">
                         <h4 className="font-semibold text-white">{artist.name}</h4>
