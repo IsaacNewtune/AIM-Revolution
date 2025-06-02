@@ -45,6 +45,7 @@ export default function MusicPlayer() {
 
   // Drag handlers for mobile touch events
   const handleTouchStart = (e: React.TouchEvent) => {
+    console.log('Touch start detected');
     setIsDragging(true);
     startY.current = e.touches[0].clientY;
     setDragY(0);
@@ -55,6 +56,7 @@ export default function MusicPlayer() {
     
     const currentY = e.touches[0].clientY;
     const deltaY = startY.current - currentY;
+    console.log('Touch move:', deltaY);
     setDragY(deltaY);
     
     // Prevent scrolling while dragging
@@ -64,10 +66,12 @@ export default function MusicPlayer() {
   const handleTouchEnd = () => {
     if (!isDragging) return;
     
+    console.log('Touch end, dragY:', dragY);
     setIsDragging(false);
     
     // If dragged up more than 50px, expand
     if (dragY > 50) {
+      console.log('Expanding player');
       setIsExpanded(true);
     }
     
