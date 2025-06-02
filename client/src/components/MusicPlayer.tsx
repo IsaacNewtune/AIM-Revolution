@@ -43,35 +43,38 @@ export default function MusicPlayer() {
     setVolume(value[0]);
   };
 
-  // Improved touch handlers for iPad/iOS compatibility
+  // iOS-optimized touch handlers
   const handleTouchStart = (e: React.TouchEvent) => {
-    console.log('Touch start detected');
-    e.preventDefault(); // Prevent iOS scroll behavior
+    console.log('Touch start detected on iOS');
+    // Don't prevent default on touchstart to avoid breaking other interactions
     setIsDragging(true);
     startY.current = e.touches[0].clientY;
     setDragY(0);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || !e.touches[0]) return;
     
-    e.preventDefault(); // Prevent iOS scroll behavior
     const currentY = e.touches[0].clientY;
     const deltaY = startY.current - currentY;
-    console.log('Touch move:', deltaY);
-    setDragY(deltaY);
+    
+    // Only prevent default if we're actually dragging up (expanding)
+    if (deltaY > 5) {
+      e.preventDefault();
+      console.log('Touch move - expanding:', deltaY);
+      setDragY(deltaY);
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (!isDragging) return;
     
-    e.preventDefault(); // Prevent iOS scroll behavior
     console.log('Touch end, dragY:', dragY);
     setIsDragging(false);
     
-    // If dragged up more than 30px (reduced threshold for easier expansion), expand
-    if (dragY > 30) {
-      console.log('Expanding player');
+    // Very low threshold for easier expansion on touch devices
+    if (dragY > 20) {
+      console.log('Expanding player via touch');
       setIsExpanded(true);
     }
     
@@ -303,11 +306,11 @@ export default function MusicPlayer() {
   // Compact Player Bar
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-lg border-t border-white/20 z-40">
-      {/* Drag Handle */}
+      {/* Drag Handle - Enhanced for iPad */}
       <div
-        className={`w-full h-2 flex items-center justify-center cursor-pointer transition-all duration-200 ${
-          isDragging ? `transform translate-y-${Math.min(dragY, 100)}` : ''
-        } ${isDragging ? 'bg-primary/30' : 'hover:bg-white/10'}`}
+        className={`w-full h-6 flex items-center justify-center cursor-pointer transition-all duration-200 ${
+          isDragging ? 'bg-primary/30' : 'hover:bg-white/10'
+        }`}
         style={{
           transform: isDragging ? `translateY(-${Math.min(dragY, 100)}px)` : 'translateY(0)',
         }}
@@ -315,13 +318,16 @@ export default function MusicPlayer() {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
-        onClick={() => !isDragging && setIsExpanded(true)}
+        onClick={() => {
+          console.log('Drag handle clicked');
+          setIsExpanded(true);
+        }}
       >
-        <div className="w-12 h-1 bg-white/40 rounded-full"></div>
+        <div className="w-16 h-2 bg-white/60 rounded-full shadow-sm"></div>
       </div>
 
       {/* Compact Player Content */}
-      <div className="flex items-center justify-between px-4 py-3 max-w-full">
+      <div className="flex items-center px-4 py-3 gap-4">
         {/* Song Info */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="w-12 h-12 rounded-lg overflow-hidden bg-primary/20 flex-shrink-0">
@@ -343,8 +349,8 @@ export default function MusicPlayer() {
           </div>
         </div>
 
-        {/* Player Controls */}
-        <div className="flex items-center gap-2">
+        {/* Player Controls - Centered */}
+        <div className="flex items-center justify-center gap-2 flex-shrink-0">
           <Button
             variant="ghost"
             size="sm"
@@ -376,6 +382,17 @@ export default function MusicPlayer() {
             className="text-white hover:bg-white/20 disabled:opacity-50"
           >
             <SkipForward className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Tip Button */}
+        <div className="flex-shrink-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/20"
+          >
+            <Heart className="w-4 h-4" />
           </Button>
         </div>
       </div>
