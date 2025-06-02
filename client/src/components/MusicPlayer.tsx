@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Shuffle, Repeat, List, ChevronUp, Heart } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Shuffle, Repeat, List, ChevronUp, Heart, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
@@ -26,27 +26,27 @@ export default function MusicPlayer() {
     next,
     setVolume,
     toggleMute,
-    seekTo
+    seek
   } = useMusicPlayer();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragY, setDragY] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
   const startY = useRef(0);
 
   const handleSeek = (value: number[]) => {
-    seekTo(value[0]);
+    seek(value[0]);
   };
 
   const handleVolumeChange = (value: number[]) => {
     setVolume(value[0]);
   };
 
-  // iOS-optimized touch handlers
+  // Enhanced iOS touch handlers with better sensitivity
   const handleTouchStart = (e: React.TouchEvent) => {
-    console.log('Touch start detected on iOS');
-    // Don't prevent default on touchstart to avoid breaking other interactions
+    console.log('Touch start detected on iOS at:', e.touches[0].clientY);
     setIsDragging(true);
     startY.current = e.touches[0].clientY;
     setDragY(0);
@@ -58,10 +58,12 @@ export default function MusicPlayer() {
     const currentY = e.touches[0].clientY;
     const deltaY = startY.current - currentY;
     
-    // Only prevent default if we're actually dragging up (expanding)
-    if (deltaY > 5) {
+    console.log('Touch move delta:', deltaY);
+    
+    // More sensitive detection for iPad
+    if (deltaY > 2) {
       e.preventDefault();
-      console.log('Touch move - expanding:', deltaY);
+      e.stopPropagation();
       setDragY(deltaY);
     }
   };
@@ -69,12 +71,12 @@ export default function MusicPlayer() {
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (!isDragging) return;
     
-    console.log('Touch end, dragY:', dragY);
+    console.log('Touch end, final dragY:', dragY);
     setIsDragging(false);
     
-    // Very low threshold for easier expansion on touch devices
-    if (dragY > 20) {
-      console.log('Expanding player via touch');
+    // Even lower threshold - 15px for iPad sensitivity
+    if (dragY > 15) {
+      console.log('Expanding player via touch drag');
       setIsExpanded(true);
     }
     
@@ -385,14 +387,34 @@ export default function MusicPlayer() {
           </Button>
         </div>
 
-        {/* Tip Button */}
-        <div className="flex-shrink-0">
+        {/* Like and Tip Buttons */}
+        <div className="flex items-center gap-1 flex-shrink-0">
           <Button
             variant="ghost"
             size="sm"
-            className="text-white hover:bg-white/20"
+            onClick={() => setIsLiked(!isLiked)}
+            className={`transition-colors ${
+              isLiked ? 'text-pink-500 hover:text-pink-400' : 'text-white hover:bg-white/20'
+            }`}
           >
-            <Heart className="w-4 h-4" />
+            <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setIsExpanded(true);
+              setTimeout(() => {
+                const tipSection = document.getElementById('tip-section');
+                if (tipSection) {
+                  tipSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }, 300);
+            }}
+            className="text-white hover:bg-white/20 hover:text-green-400"
+          >
+            <DollarSign className="w-4 h-4" />
           </Button>
         </div>
       </div>
