@@ -204,6 +204,50 @@ export default function ArtistDashboard() {
             )}
           </Card>
         </section>
+
+        {/* Recent Tips */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">Recent Tips</h2>
+          <Card className="bg-card-bg">
+            <CardContent className="p-0">
+              {tips.length > 0 ? (
+                <div className="space-y-4 p-6">
+                  {tips.slice(0, 10).map((tip: any) => (
+                    <div key={tip.id} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <img 
+                          src={tip.user?.profileImageUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40"} 
+                          alt="User" 
+                          className="w-10 h-10 rounded-full object-cover" 
+                        />
+                        <div>
+                          <p className="font-medium">
+                            {tip.user?.firstName || 'Anonymous'} {tip.user?.lastName || 'Listener'}
+                          </p>
+                          <p className="text-text-secondary text-sm">
+                            {new Date(tip.createdAt).toLocaleDateString()} • {new Date(tip.createdAt).toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-yellow-500">${tip.amount}</p>
+                        {tip.message && (
+                          <p className="text-text-secondary text-sm max-w-xs truncate">{tip.message}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-text-secondary">
+                  <i className="fas fa-coins text-4xl mb-4 opacity-50"></i>
+                  <p>No tips received yet</p>
+                  <p className="text-sm mt-2">Fans can tip you while listening to your music</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </section>
         </div>
       </div>
     </div>

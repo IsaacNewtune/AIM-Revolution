@@ -699,6 +699,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get tips received by an artist
+  app.get('/api/tips/received/:artistId', requireAuth, async (req: any, res) => {
+    try {
+      const artistId = parseInt(req.params.artistId);
+      const tips = await storage.getTipsByArtist(artistId);
+      res.json(tips);
+    } catch (error) {
+      console.error("Error fetching received tips:", error);
+      res.status(500).json({ message: "Failed to fetch tips" });
+    }
+  });
+
+  // Get tips sent by a user
+  app.get('/api/tips/sent', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const tips = await storage.getTipsByUser(userId);
+      res.json(tips);
+    } catch (error) {
+      console.error("Error fetching sent tips:", error);
+      res.status(500).json({ message: "Failed to fetch sent tips" });
+    }
+  });
+
   // Playlist routes
   app.get("/api/playlists", requireAuth, async (req: any, res) => {
     try {

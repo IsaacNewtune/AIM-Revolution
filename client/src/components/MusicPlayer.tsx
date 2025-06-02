@@ -47,7 +47,7 @@ export default function MusicPlayer() {
         body: JSON.stringify({ 
           amount,
           songId: currentSong?.id,
-          toArtistId: currentSong?.artistId || currentSong?.artist_id 
+          toArtistId: currentSong?.artistId 
         }),
       });
       
