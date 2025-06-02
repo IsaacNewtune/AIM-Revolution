@@ -51,9 +51,9 @@ export default function MusicPlayer() {
           {/* Song Info */}
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-12 h-12 rounded-lg overflow-hidden bg-primary/20 flex-shrink-0">
-              {currentSong.cover_image_url ? (
+              {currentSong.cover_art_url ? (
                 <img 
-                  src={currentSong.cover_image_url} 
+                  src={currentSong.cover_art_url} 
                   alt={currentSong.title}
                   className="w-full h-full object-cover"
                 />
@@ -187,9 +187,9 @@ export default function MusicPlayer() {
                 }`}
               >
                 <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  {song.cover_image_url ? (
+                  {song.cover_art_url ? (
                     <img 
-                      src={song.cover_image_url} 
+                      src={song.cover_art_url} 
                       alt={song.title}
                       className="w-full h-full object-cover rounded"
                     />

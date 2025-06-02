@@ -4,8 +4,8 @@ interface Song {
   id: string;
   title: string;
   artist_name: string;
-  audio_url?: string;
-  cover_image_url?: string;
+  file_url?: string;
+  cover_art_url?: string;
   duration?: number;
 }
 
@@ -80,8 +80,8 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
 
   // Update audio source when current song changes
   useEffect(() => {
-    if (currentSong?.audio_url) {
-      audioRef.current.src = currentSong.audio_url;
+    if (currentSong?.file_url) {
+      audioRef.current.src = currentSong.file_url;
       audioRef.current.load();
     }
   }, [currentSong]);

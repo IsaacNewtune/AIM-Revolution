@@ -7,8 +7,8 @@ interface PlayButtonProps {
     id: string;
     title: string;
     artist_name: string;
-    audio_url?: string;
-    cover_image_url?: string;
+    file_url?: string;
+    cover_art_url?: string;
     duration?: number;
   };
   size?: 'sm' | 'md' | 'lg';
