@@ -51,9 +51,9 @@ export default function MusicPlayer() {
           {/* Song Info */}
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-12 h-12 rounded-lg overflow-hidden bg-primary/20 flex-shrink-0">
-              {currentSong.cover_art_url ? (
+              {(currentSong.coverArtUrl || currentSong.cover_art_url) ? (
                 <img 
-                  src={currentSong.cover_art_url} 
+                  src={currentSong.coverArtUrl || currentSong.cover_art_url} 
                   alt={currentSong.title}
                   className="w-full h-full object-cover"
                 />
@@ -65,7 +65,7 @@ export default function MusicPlayer() {
             </div>
             <div className="min-w-0 flex-1">
               <h4 className="text-sm font-medium text-white truncate">{currentSong.title}</h4>
-              <p className="text-xs text-text-secondary truncate">{currentSong.artist_name}</p>
+              <p className="text-xs text-text-secondary truncate">{currentSong.artistName || currentSong.artist_name}</p>
             </div>
           </div>
 
