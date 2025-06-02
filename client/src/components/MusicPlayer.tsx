@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Shuffle, Repeat, List } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Shuffle, Repeat, List, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
@@ -30,6 +30,7 @@ export default function MusicPlayer() {
   } = useMusicPlayer();
 
   const [showQueue, setShowQueue] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (!currentSong) return null;
 
@@ -45,8 +46,133 @@ export default function MusicPlayer() {
 
   return (
     <>
+      {/* Expanded Player Modal */}
+      {isExpanded && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-lg z-50 flex flex-col">
+          {/* Drag Handle */}
+          <div className="w-full flex justify-center py-4">
+            <button
+              onClick={() => setIsExpanded(false)}
+              className="w-12 h-1.5 bg-gray-400 rounded-full hover:bg-gray-300 transition-colors"
+            />
+          </div>
+          
+          {/* Expanded Player Content */}
+          <div className="flex-1 flex flex-col items-center justify-center px-8 pb-24">
+            {/* Large Album Art */}
+            <div className="w-80 h-80 rounded-2xl overflow-hidden bg-primary/20 mb-8 shadow-2xl">
+              {(currentSong.coverArtUrl || currentSong.cover_art_url) ? (
+                <img 
+                  src={currentSong.coverArtUrl || currentSong.cover_art_url} 
+                  alt={currentSong.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Play className="w-24 h-24 text-primary" />
+                </div>
+              )}
+            </div>
+
+            {/* Song Info */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-white mb-2">{currentSong.title}</h1>
+              <p className="text-xl text-text-secondary">{currentSong.artistName || currentSong.artist_name}</p>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full max-w-md mb-8">
+              <div className="flex items-center gap-4 mb-2">
+                <span className="text-sm text-text-secondary min-w-[40px]">
+                  {formatTime(currentTime)}
+                </span>
+                <Slider
+                  value={[currentTime]}
+                  max={duration || 100}
+                  step={1}
+                  onValueChange={handleSeek}
+                  className="flex-1"
+                />
+                <span className="text-sm text-text-secondary min-w-[40px]">
+                  {formatTime(duration)}
+                </span>
+              </div>
+            </div>
+
+            {/* Player Controls */}
+            <div className="flex items-center gap-6 mb-8">
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={previous}
+                disabled={currentIndex === 0}
+                className="text-white hover:text-primary"
+              >
+                <SkipBack className="w-8 h-8" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={togglePlay}
+                className="text-white hover:text-primary w-16 h-16 rounded-full bg-primary/20"
+              >
+                {isPlaying ? (
+                  <Pause className="w-10 h-10" />
+                ) : (
+                  <Play className="w-10 h-10" />
+                )}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={next}
+                disabled={currentIndex >= queue.length - 1}
+                className="text-white hover:text-primary"
+              >
+                <SkipForward className="w-8 h-8" />
+              </Button>
+            </div>
+
+            {/* Volume Control */}
+            <div className="flex items-center gap-4 w-full max-w-xs">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleMute}
+                className="text-white hover:text-primary"
+              >
+                {isMuted ? (
+                  <VolumeX className="w-5 h-5" />
+                ) : (
+                  <Volume2 className="w-5 h-5" />
+                )}
+              </Button>
+              
+              <Slider
+                value={[isMuted ? 0 : volume]}
+                max={1}
+                step={0.01}
+                onValueChange={handleVolumeChange}
+                className="flex-1"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Player Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-card-bg border-t border-card-border backdrop-blur-md z-50">
+        {/* Drag Handle */}
+        <div className="w-full flex justify-center py-2">
+          <button
+            onClick={() => setIsExpanded(true)}
+            className="w-12 h-1.5 bg-gray-500 rounded-full hover:bg-gray-400 transition-colors cursor-pointer"
+            aria-label="Expand player"
+          />
+        </div>
+        
         <div className="flex items-center justify-between px-4 py-3 max-w-full">
           {/* Song Info */}
           <div className="flex items-center gap-3 min-w-0 flex-1">
