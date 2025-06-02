@@ -264,6 +264,38 @@ export default function MusicPlayer() {
               </div>
             </div>
           </div>
+
+          {/* Tip Section */}
+          <div id="tip-section" className="w-full max-w-md bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+            <h3 className="text-lg font-semibold text-white mb-4 text-center">Support the Artist</h3>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <Button 
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => console.log('Tip $1')}
+              >
+                $1
+              </Button>
+              <Button 
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => console.log('Tip $5')}
+              >
+                $5
+              </Button>
+              <Button 
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => console.log('Tip $10')}
+              >
+                $10
+              </Button>
+            </div>
+            <Button 
+              variant="outline" 
+              className="w-full border-white/30 text-white hover:bg-white/10"
+              onClick={() => console.log('Custom tip amount')}
+            >
+              Custom Amount
+            </Button>
+          </div>
         </div>
 
         {/* Queue Panel */}
