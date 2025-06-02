@@ -75,9 +75,9 @@ export default function SongList({ title = "Songs", endpoint, queryKey }: SongLi
               <div className="flex items-center space-x-4">
                 <div className="relative group">
                   <div className="w-16 h-16 rounded-lg overflow-hidden bg-primary/20 flex items-center justify-center">
-                    {song.cover_image_url ? (
+                    {song.cover_art_url ? (
                       <img 
-                        src={song.cover_image_url} 
+                        src={song.cover_art_url} 
                         alt={song.title} 
                         className="w-full h-full object-cover" 
                       />

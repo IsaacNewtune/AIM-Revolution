@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import SongList from "@/components/SongList";
+import PlayButton from "@/components/PlayButton";
 import { apiRequest } from "@/lib/queryClient";
 
 interface SearchResult {
@@ -93,16 +94,24 @@ export default function Discover() {
                 <Card key={song.id} className="bg-card-bg border-card-border hover:bg-card-hover transition-colors">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-lg overflow-hidden bg-primary/20 flex items-center justify-center">
-                        {song.cover_image_url ? (
+                      <div className="h-12 w-12 rounded-lg overflow-hidden bg-primary/20 flex items-center justify-center relative group">
+                        {song.cover_art_url ? (
                           <img 
-                            src={song.cover_image_url} 
+                            src={song.cover_art_url} 
                             alt={song.title}
                             className="w-full h-full object-cover"
                           />
                         ) : (
                           <Music className="h-6 w-6 text-primary" />
                         )}
+                        <div className="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <PlayButton 
+                            song={song} 
+                            size="sm" 
+                            variant="ghost" 
+                            className="text-white hover:text-primary bg-transparent" 
+                          />
+                        </div>
                       </div>
                       <div className="flex-1">
                         <h4 className="font-semibold text-white">{song.title}</h4>
