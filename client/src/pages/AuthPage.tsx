@@ -59,17 +59,14 @@ export default function AuthPage() {
 
   const registerMutation = useMutation({
     mutationFn: async (userData: { firstName: string; lastName: string; email: string; password: string }) => {
-      // Include the selected account type from localStorage
-      const accountType = localStorage.getItem('selectedAccountType') || 'listener';
-      const res = await apiRequest('POST', '/api/auth/register', { ...userData, accountType });
+      // Register without account type - user will select it after
+      const res = await apiRequest('POST', '/api/auth/register', userData);
       return res.json();
     },
     onSuccess: () => {
-      // Clear the stored account type
-      localStorage.removeItem('selectedAccountType');
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      toast({ title: "Registration successful!" });
-      setLocation('/');
+      toast({ title: "Registration successful! Please select your account type." });
+      setLocation('/account-setup');
     },
     onError: (error: Error) => {
       toast({
