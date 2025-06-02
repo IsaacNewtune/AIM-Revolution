@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Shuffle, Repeat, List, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -31,6 +31,9 @@ export default function MusicPlayer() {
 
   const [showQueue, setShowQueue] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startY = useRef(0);
 
   if (!currentSong) return null;
 
@@ -41,6 +44,78 @@ export default function MusicPlayer() {
   const handleVolumeChange = (value: number[]) => {
     setVolume(value[0]);
   };
+
+  // Drag handlers for mobile touch events
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    startY.current = e.touches[0].clientY;
+    setDragY(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    const currentY = e.touches[0].clientY;
+    const deltaY = startY.current - currentY;
+    setDragY(deltaY);
+    
+    // Prevent scrolling while dragging
+    e.preventDefault();
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    
+    setIsDragging(false);
+    
+    // If dragged up more than 50px, expand
+    if (dragY > 50) {
+      setIsExpanded(true);
+    }
+    
+    setDragY(0);
+  };
+
+  // Mouse handlers for desktop
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    startY.current = e.clientY;
+    setDragY(0);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    const currentY = e.clientY;
+    const deltaY = startY.current - currentY;
+    setDragY(deltaY);
+  };
+
+  const handleMouseUp = () => {
+    if (!isDragging) return;
+    
+    setIsDragging(false);
+    
+    // If dragged up more than 50px, expand
+    if (dragY > 50) {
+      setIsExpanded(true);
+    }
+    
+    setDragY(0);
+  };
+
+  // Add mouse event listeners
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragY]);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -166,10 +241,18 @@ export default function MusicPlayer() {
       <div className="fixed bottom-0 left-0 right-0 bg-card-bg border-t border-card-border backdrop-blur-md z-50">
         {/* Drag Handle */}
         <div className="w-full flex justify-center py-2">
-          <button
-            onClick={() => setIsExpanded(true)}
-            className="w-12 h-1.5 bg-gray-500 rounded-full hover:bg-gray-400 transition-colors cursor-pointer"
-            aria-label="Expand player"
+          <div
+            className="w-12 h-1.5 bg-gray-500 rounded-full hover:bg-gray-400 transition-colors cursor-pointer select-none"
+            style={{
+              transform: isDragging ? `translateY(-${Math.min(dragY, 100)}px)` : 'none',
+              opacity: isDragging ? 0.8 : 1
+            }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleMouseDown}
+            onClick={() => !isDragging && setIsExpanded(true)}
+            aria-label="Drag up to expand player"
           />
         </div>
         
