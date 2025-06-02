@@ -38,12 +38,39 @@ export default function MusicPlayer() {
   const startY = useRef(0);
   const { toast } = useToast();
 
-  const handleTipAttempt = (amount: string) => {
-    toast({
-      title: "Insufficient Funds",
-      description: "You need to add credits to your account to tip artists. Please visit your account settings to add funds.",
-      variant: "destructive",
-    });
+  const handleTipAttempt = async (amount: string) => {
+    try {
+      const response = await fetch('/api/tips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          amount,
+          songId: currentSong?.id,
+          toArtistId: currentSong?.artistId || currentSong?.artist_id 
+        }),
+      });
+      
+      if (response.ok) {
+        toast({
+          title: "Tip Sent!",
+          description: `Successfully tipped $${amount} to ${currentSong?.artistName || currentSong?.artist_name}`,
+        });
+      } else {
+        const error = await response.text();
+        toast({
+          title: "Tip Failed",
+          description: error || "Unable to process tip. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Tip Failed",
+        description: "Unable to process tip. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSeek = (value: number[]) => {

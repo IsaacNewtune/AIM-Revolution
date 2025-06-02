@@ -652,6 +652,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Tip processing endpoint
+  app.post('/api/tips', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const { amount, songId, toArtistId } = req.body;
+      
+      if (!amount || !toArtistId) {
+        return res.status(400).json({ message: "Amount and artist ID are required" });
+      }
+
+      // Get user's current credit balance
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const tipAmount = parseFloat(amount);
+      const userBalance = parseFloat(user.creditBalance || '0');
+
+      // Check if user has sufficient funds
+      if (userBalance < tipAmount) {
+        return res.status(400).send("Insufficient funds");
+      }
+
+      // Process the tip
+      const tipData = {
+        fromUserId: userId,
+        toArtistId: parseInt(toArtistId),
+        songId: songId || null,
+        amount: amount.toString(),
+        message: null,
+        trackingNumber: `TIP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+
+      const tip = await storage.createTip(tipData);
+      
+      // Deduct from user's credit balance
+      const newBalance = userBalance - tipAmount;
+      await storage.updateUserCredits(userId, newBalance.toString());
+
+      res.json({ tip, newBalance });
+    } catch (error) {
+      console.error("Error processing tip:", error);
+      res.status(500).json({ message: "Failed to process tip" });
+    }
+  });
+
   // Playlist routes
   app.get("/api/playlists", requireAuth, async (req: any, res) => {
     try {
