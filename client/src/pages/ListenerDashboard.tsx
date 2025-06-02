@@ -13,7 +13,7 @@ import { Link } from "wouter";
 
 export default function ListenerDashboard() {
   const { user } = useAuth();
-  const { playSong, currentSong } = useMusicPlayer();
+  const { play, currentSong } = useMusicPlayer();
   const [showTipModal, setShowTipModal] = useState(false);
   const [tipTarget, setTipTarget] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,7 +43,7 @@ export default function ListenerDashboard() {
   };
 
   const handlePlay = (song: any) => {
-    playSong(song);
+    play(song);
     // Record stream
     fetch('/api/streams', {
       method: 'POST',
