@@ -11,15 +11,8 @@ export default function Home() {
       // Redirect to appropriate dashboard based on account type
       setLocation(`/${user.accountType}`);
     } else {
-      // User needs to complete setup - check if they have a stored account type preference
-      const selectedType = localStorage.getItem('selectedAccountType');
-      if (selectedType) {
-        // Complete the setup process
-        // This would typically show a setup form, but for now redirect to listener
-        setLocation('/listener');
-      } else {
-        setLocation('/listener'); // Default fallback
-      }
+      // User needs to select account type first
+      setLocation('/account-setup');
     }
   }, [user, setLocation]);
 
