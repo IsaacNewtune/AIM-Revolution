@@ -555,12 +555,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (type === 'all' || type === 'playlists') {
         // Search public playlists
         const playlistResults = await db.execute(sql`
-          SELECT p.id, p.user_id, p.name, p.description, p.is_public, 
+          SELECT p.id, p.user_id, p.title, p.description, p.is_public, 
                  p.cover_image_url, p.created_at, u.first_name, u.last_name
           FROM playlists p
           JOIN users u ON p.user_id = u.id
           WHERE p.is_public = true 
-            AND (LOWER(p.name) LIKE ${`%${searchTerm}%`} 
+            AND (LOWER(p.title) LIKE ${`%${searchTerm}%`} 
                  OR LOWER(p.description) LIKE ${`%${searchTerm}%`})
           LIMIT ${searchLimit}
         `);
