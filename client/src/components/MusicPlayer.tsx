@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { useToast } from '@/hooks/use-toast';
+import TipModal from '@/components/TipModal';
 
 function formatTime(seconds: number): string {
   if (isNaN(seconds)) return '0:00';
@@ -35,6 +36,8 @@ export default function MusicPlayer() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragY, setDragY] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  const [showTipModal, setShowTipModal] = useState(false);
+  const [tipTarget, setTipTarget] = useState<{ type: 'track' | 'artist'; data: any } | null>(null);
   const startY = useRef(0);
   const { toast } = useToast();
 
@@ -70,6 +73,22 @@ export default function MusicPlayer() {
         description: "Unable to process tip. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleTipClick = () => {
+    if (currentSong) {
+      setTipTarget({ 
+        type: 'track', 
+        data: {
+          id: currentSong.id,
+          title: currentSong.title,
+          artistName: currentSong.artistName,
+          artistId: currentSong.artistId,
+          coverArtUrl: currentSong.coverArtUrl
+        }
+      });
+      setShowTipModal(true);
     }
   };
 
@@ -472,15 +491,7 @@ export default function MusicPlayer() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              setIsExpanded(true);
-              setTimeout(() => {
-                const tipSection = document.getElementById('tip-section');
-                if (tipSection) {
-                  tipSection.scrollIntoView({ behavior: 'smooth' });
-                }
-              }, 300);
-            }}
+            onClick={handleTipClick}
             className="text-white hover:bg-white/20 hover:text-green-400"
           >
             <DollarSign className="w-4 h-4" />
