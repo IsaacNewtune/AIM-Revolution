@@ -30,8 +30,19 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
 
   const tipMutation = useMutation({
     mutationFn: async (tipData: any) => {
-      // Don't actually send the request since payment processing isn't set up
-      throw new Error("Payment processing is not yet available. Tip functionality will be added soon.");
+      const response = await fetch('/api/tips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(tipData),
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to send tip');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({ title: "Success", description: "Tip sent successfully!" });
@@ -43,7 +54,7 @@ export default function TipModal({ open, onOpenChange, target }: TipModalProps) 
     },
     onError: (error: Error) => {
       toast({ 
-        title: "Payment Setup Required", 
+        title: "Tip Failed", 
         description: error.message,
         variant: "destructive" 
       });

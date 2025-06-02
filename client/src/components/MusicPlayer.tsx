@@ -514,6 +514,13 @@ export default function MusicPlayer() {
           className="w-full h-1"
         />
       </div>
+
+      {/* Tip Modal */}
+      <TipModal 
+        open={showTipModal} 
+        onOpenChange={setShowTipModal} 
+        target={tipTarget} 
+      />
     </div>
   );
 }
