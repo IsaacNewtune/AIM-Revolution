@@ -31,19 +31,52 @@ export default function ManagerDashboard() {
       <Sidebar userType="manager" />
       
       {/* Main Content */}
-      <div className="ml-64 p-6">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Management Dashboard</h1>
+      <div className="lg:ml-64 p-4 lg:p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 lg:mb-8">
+          <h1 className="text-2xl lg:text-3xl font-bold">Management Dashboard</h1>
           <Button 
             onClick={() => setLocation('/manager/create-artist')}
-            className="px-4 py-2 bg-gradient-to-r from-ai-purple to-ai-blue text-white rounded-lg hover:shadow-lg transition-all"
+            className="px-4 py-2 bg-gradient-to-r from-ai-purple to-ai-blue text-white rounded-lg hover:shadow-lg transition-all w-full sm:w-auto"
           >
             <i className="fas fa-plus mr-2"></i>Add New Artist
           </Button>
         </div>
 
+        {/* Quick Actions */}
+        <section className="mb-6 lg:mb-8">
+          <h2 className="text-xl lg:text-2xl font-bold mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <Button
+              onClick={() => setLocation('/manager/create-artist')}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white p-6 h-auto flex flex-col items-center space-y-2"
+            >
+              <Plus className="h-6 w-6" />
+              <span className="text-lg font-medium">Add New Artist</span>
+              <span className="text-sm opacity-90">Onboard a new artist</span>
+            </Button>
+            <Button
+              onClick={() => setLocation('/upload')}
+              variant="outline"
+              className="border-gray-600 text-white hover:bg-gray-800 p-6 h-auto flex flex-col items-center space-y-2"
+            >
+              <Upload className="h-6 w-6" />
+              <span className="text-lg font-medium">Upload Content</span>
+              <span className="text-sm opacity-90">Upload for your artists</span>
+            </Button>
+            <Button
+              onClick={() => setLocation('/analytics')}
+              variant="outline"
+              className="border-gray-600 text-white hover:bg-gray-800 p-6 h-auto flex flex-col items-center space-y-2"
+            >
+              <i className="fas fa-chart-bar text-xl"></i>
+              <span className="text-lg font-medium">View Analytics</span>
+              <span className="text-sm opacity-90">Track performance</span>
+            </Button>
+          </div>
+        </section>
+
         {/* Overview Stats */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
           <Card className="bg-card-bg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -91,8 +124,8 @@ export default function ManagerDashboard() {
         </div>
 
         {/* Top Performing Artists */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">Top Performing Artists</h2>
+        <section className="mb-6 lg:mb-8">
+          <h2 className="text-xl lg:text-2xl font-bold mb-4">Top Performing Artists</h2>
           <Card className="bg-card-bg overflow-hidden">
             <div className="p-4 border-b border-gray-700">
               <div className="grid grid-cols-12 gap-4 text-sm text-text-secondary font-medium">
@@ -166,7 +199,7 @@ export default function ManagerDashboard() {
 
         {/* Recent Activity */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">Recent Activity</h2>
+          <h2 className="text-xl lg:text-2xl font-bold mb-4">Recent Activity</h2>
           <Card className="bg-card-bg">
             <CardContent className="p-6">
               <div className="space-y-4">
