@@ -17,9 +17,11 @@ import {
   insertSongReviewSchema,
   insertArtistReviewSchema,
   songs,
-  artists
+  artists,
+  playlists,
+  users
 } from "@shared/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, or } from "drizzle-orm";
 import { z } from "zod";
 
 // Configure multer for file uploads
@@ -509,6 +511,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching search suggestions:", error);
       res.status(500).json({ message: "Failed to fetch suggestions" });
+    }
+  });
+
+  // Comprehensive search endpoint
+  app.get('/api/search', async (req, res) => {
+    try {
+      const { q: query, type = 'all', limit = 20 } = req.query;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ message: "Search query is required" });
+      }
+
+      const searchTerm = query.toLowerCase().trim();
+      const searchLimit = Math.min(parseInt(limit as string) || 20, 50);
+      
+      const results: any = {};
+
+      if (type === 'all' || type === 'songs') {
+        // Use storage method for songs search
+        const songsResults = await storage.getAllSongs({
+          search: searchTerm,
+          limit: searchLimit
+        });
+        results.songs = songsResults;
+      }
+
+      if (type === 'all' || type === 'artists') {
+        // Search artists using raw query to avoid TypeScript issues
+        const artistResults = await db.execute(sql`
+          SELECT id, user_id, name, bio, location, genre, profile_image_url, 
+                 total_streams, total_revenue, monthly_listeners
+          FROM artists 
+          WHERE LOWER(name) LIKE ${`%${searchTerm}%`} 
+             OR LOWER(bio) LIKE ${`%${searchTerm}%`}
+             OR LOWER(genre) LIKE ${`%${searchTerm}%`}
+             OR LOWER(location) LIKE ${`%${searchTerm}%`}
+          LIMIT ${searchLimit}
+        `);
+        results.artists = artistResults.rows;
+      }
+
+      if (type === 'all' || type === 'playlists') {
+        // Search public playlists
+        const playlistResults = await db.execute(sql`
+          SELECT p.id, p.user_id, p.name, p.description, p.is_public, 
+                 p.cover_image_url, p.created_at, u.first_name, u.last_name
+          FROM playlists p
+          JOIN users u ON p.user_id = u.id
+          WHERE p.is_public = true 
+            AND (LOWER(p.name) LIKE ${`%${searchTerm}%`} 
+                 OR LOWER(p.description) LIKE ${`%${searchTerm}%`})
+          LIMIT ${searchLimit}
+        `);
+        results.playlists = playlistResults.rows;
+      }
+
+      // Add search metadata
+      results.query = query;
+      results.totalResults = Object.values(results).reduce((sum: number, arr: any) => 
+        Array.isArray(arr) ? sum + arr.length : sum, 0);
+
+      res.json(results);
+    } catch (error) {
+      console.error("Error performing search:", error);
+      res.status(500).json({ message: "Search failed" });
     }
   });
 
