@@ -13,24 +13,58 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function Discover() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [searchType, setSearchType] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const [genre, setGenre] = useState("all");
   const { user } = useAuth();
 
-  const buildQueryParams = () => {
-    const params = new URLSearchParams();
-    if (searchTerm) params.append('search', searchTerm);
-    if (sortBy !== 'recent') params.append('sortBy', sortBy);
-    if (genre !== 'all') params.append('genre', genre);
-    params.append('limit', '50');
-    return params.toString();
-  };
+  // Debounce search term to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Search query - only execute if we have a search term
+  const { data: searchResults, isLoading: isSearching } = useQuery({
+    queryKey: ['/api/search', debouncedSearchTerm, searchType],
+    enabled: !!debouncedSearchTerm,
+    queryFn: () => {
+      const params = new URLSearchParams();
+      params.append('q', debouncedSearchTerm);
+      params.append('type', searchType);
+      params.append('limit', '20');
+      return fetch(`/api/search?${params.toString()}`).then(res => res.json());
+    }
+  });
+
+  // Default content queries (when not searching)
+  const { data: allSongs = [] } = useQuery({
+    queryKey: ['/api/songs', sortBy, genre],
+    enabled: !debouncedSearchTerm,
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (sortBy !== 'recent') params.append('sortBy', sortBy);
+      if (genre !== 'all') params.append('genre', genre);
+      params.append('limit', '50');
+      return fetch(`/api/songs?${params.toString()}`).then(res => res.json());
+    }
+  });
+
+  const { data: trendingSongs = [] } = useQuery({
+    queryKey: ['/api/songs/trending'],
+    enabled: !debouncedSearchTerm
+  });
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar userType={user?.accountType || "listener"} />
-      
-      <div className="flex-1 overflow-auto">
+    <div className="min-h-screen bg-dark-bg text-white">
+      <Header userType={user?.accountType || "listener"} />
+      <div className="flex">
+        <Sidebar userType={user?.accountType || "listener"} />
+        
+        <div className="flex-1 lg:ml-64 p-4 lg:p-6 pt-20 lg:pt-6">
         <div className="container mx-auto px-6 py-8 max-w-6xl">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Discover Music</h1>
@@ -100,8 +134,8 @@ export default function Discover() {
             <TabsContent value="all" className="space-y-6">
               <SongList
                 title="All Songs"
-                endpoint={`/api/songs?${buildQueryParams()}`}
-                queryKey={["/api/songs", searchTerm, sortBy, genre]}
+                endpoint="/api/songs"
+                queryKey={["/api/songs", sortBy, genre]}
               />
             </TabsContent>
 
@@ -121,6 +155,7 @@ export default function Discover() {
               />
             </TabsContent>
           </Tabs>
+        </div>
         </div>
       </div>
     </div>
