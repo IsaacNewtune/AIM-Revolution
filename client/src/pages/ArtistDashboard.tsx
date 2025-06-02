@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function ArtistDashboard() {

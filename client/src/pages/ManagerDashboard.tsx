@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
 import { useAuth } from "@/hooks/useAuth";
 import { Settings, Upload, Plus } from "lucide-react";
 
@@ -28,19 +29,21 @@ export default function ManagerDashboard() {
 
   return (
     <div className="min-h-screen bg-dark-bg text-white">
-      <Sidebar userType="manager" />
-      
-      {/* Main Content */}
-      <div className="lg:ml-64 p-4 lg:p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 lg:mb-8">
-          <h1 className="text-2xl lg:text-3xl font-bold">Management Dashboard</h1>
-          <Button 
-            onClick={() => setLocation('/manager/create-artist')}
-            className="px-4 py-2 bg-gradient-to-r from-ai-purple to-ai-blue text-white rounded-lg hover:shadow-lg transition-all w-full sm:w-auto"
-          >
-            <i className="fas fa-plus mr-2"></i>Add New Artist
-          </Button>
-        </div>
+      <Header userType="manager" />
+      <div className="flex">
+        <Sidebar userType="manager" />
+        
+        {/* Main Content */}
+        <div className="flex-1 lg:ml-64 p-4 lg:p-6 pt-20 lg:pt-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 lg:mb-8">
+            <h1 className="text-2xl lg:text-3xl font-bold">Management Dashboard</h1>
+            <Button 
+              onClick={() => setLocation('/manager/create-artist')}
+              className="px-4 py-2 bg-gradient-to-r from-ai-purple to-ai-blue text-white rounded-lg hover:shadow-lg transition-all w-full sm:w-auto"
+            >
+              <i className="fas fa-plus mr-2"></i>Add New Artist
+            </Button>
+          </div>
 
         {/* Quick Actions */}
         <section className="mb-6 lg:mb-8">
@@ -222,6 +225,7 @@ export default function ManagerDashboard() {
             </CardContent>
           </Card>
         </section>
+        </div>
       </div>
     </div>
   );
