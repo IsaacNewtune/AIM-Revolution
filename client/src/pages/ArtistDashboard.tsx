@@ -33,11 +33,13 @@ export default function ArtistDashboard() {
 
   return (
     <div className="min-h-screen bg-dark-bg text-white">
-      <Sidebar userType="artist" />
-      
-      {/* Main Content */}
-      <div className="lg:ml-64 p-4 lg:p-6">
-        {/* Artist Profile Header */}
+      <Header userType="artist" />
+      <div className="flex">
+        <Sidebar userType="artist" />
+        
+        {/* Main Content */}
+        <div className="flex-1 lg:ml-64 p-4 lg:p-6 pt-20 lg:pt-6">
+          {/* Artist Profile Header */}
         <div 
           className="relative mb-6 lg:mb-8 rounded-xl overflow-hidden"
           style={{
@@ -202,6 +204,7 @@ export default function ArtistDashboard() {
             )}
           </Card>
         </section>
+        </div>
       </div>
     </div>
   );
