@@ -3,9 +3,12 @@ import { createContext, useContext, useState, useRef, useEffect, ReactNode } fro
 interface Song {
   id: string;
   title: string;
-  artist_name: string;
+  artist_name?: string;
+  artistName?: string;
   file_url?: string;
+  fileUrl?: string;
   cover_art_url?: string;
+  coverArtUrl?: string;
   duration?: number;
 }
 
@@ -80,9 +83,13 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
 
   // Update audio source when current song changes
   useEffect(() => {
-    if (currentSong?.file_url) {
-      audioRef.current.src = currentSong.file_url;
-      audioRef.current.load();
+    if (currentSong) {
+      const audioSrc = currentSong.fileUrl || currentSong.file_url;
+      if (audioSrc) {
+        console.log('Loading audio:', audioSrc);
+        audioRef.current.src = audioSrc;
+        audioRef.current.load();
+      }
     }
   }, [currentSong]);
 

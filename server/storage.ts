@@ -418,22 +418,58 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTrendingSongs(): Promise<Song[]> {
-    return await db
-      .select()
+    const query = db
+      .select({
+        id: songs.id,
+        artistId: songs.artistId,
+        title: songs.title,
+        description: songs.description,
+        fileUrl: songs.fileUrl,
+        coverArtUrl: songs.coverArtUrl,
+        duration: songs.duration,
+        aiGenerationMethod: songs.aiGenerationMethod,
+        streamCount: songs.streamCount,
+        revenue: songs.revenue,
+        isPublished: songs.isPublished,
+        createdAt: songs.createdAt,
+        artistName: artists.name,
+        artistProfileImageUrl: artists.profileImageUrl
+      })
       .from(songs)
+      .innerJoin(artists, eq(songs.artistId, artists.id))
       .where(eq(songs.isPublished, true))
       .orderBy(desc(songs.streamCount))
       .limit(20);
+    
+    return await query as Song[];
   }
 
   async getRecommendedSongs(userId: string): Promise<Song[]> {
     // Get recently uploaded songs that user hasn't streamed
-    return await db
-      .select()
+    const query = db
+      .select({
+        id: songs.id,
+        artistId: songs.artistId,
+        title: songs.title,
+        description: songs.description,
+        fileUrl: songs.fileUrl,
+        coverArtUrl: songs.coverArtUrl,
+        duration: songs.duration,
+        aiGenerationMethod: songs.aiGenerationMethod,
+        streamCount: songs.streamCount,
+        revenue: songs.revenue,
+        isPublished: songs.isPublished,
+        createdAt: songs.createdAt,
+        artistName: artists.name,
+        artistProfileImageUrl: artists.profileImageUrl
+      })
       .from(songs)
+      .innerJoin(artists, eq(songs.artistId, artists.id))
       .where(eq(songs.isPublished, true))
       .orderBy(desc(songs.createdAt))
       .limit(15);
+    
+    return await query as Song[];
   }
 
   async updateSongStats(songId: string, streamCount: number, revenue: string): Promise<void> {
