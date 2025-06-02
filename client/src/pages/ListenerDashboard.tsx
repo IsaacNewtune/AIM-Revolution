@@ -130,36 +130,15 @@ export default function ListenerDashboard() {
               placeholder="Search for songs, artists, or genres..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setShowSuggestions(true)}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
               className="pl-10 bg-card-bg border-gray-700 text-white placeholder-gray-400"
             />
           </div>
         </div>
-
-        {/* Recently Played */}
-        {recentlyPlayed.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">Recently Played</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {recentlyPlayed.map((item: any, index: number) => (
-                <Card 
-                  key={index}
-                  className="bg-card-bg hover:bg-gray-800 transition-colors cursor-pointer"
-                  onClick={() => handlePlay(item)}
-                >
-                  <CardContent className="p-4">
-                    <img 
-                      src={item.coverArtUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300"} 
-                      alt="Album Cover" 
-                      className="w-full aspect-square object-cover rounded-lg mb-3" 
-                    />
-                    <h3 className="font-semibold truncate">{item.title}</h3>
-                    <p className="text-text-secondary text-sm truncate">{item.artist || 'AI Artist'}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Search Results or Trending AI Music */}
         <section className="mb-8">
@@ -221,6 +200,32 @@ export default function ListenerDashboard() {
             </div>
           )}
         </section>
+
+        {/* Recently Played */}
+        {recentlyPlayed.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Recently Played</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {recentlyPlayed.map((item: any, index: number) => (
+                <Card 
+                  key={index}
+                  className="bg-card-bg hover:bg-gray-800 transition-colors cursor-pointer"
+                  onClick={() => handlePlay(item)}
+                >
+                  <CardContent className="p-4">
+                    <img 
+                      src={item.coverArtUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300"} 
+                      alt="Album Cover" 
+                      className="w-full aspect-square object-cover rounded-lg mb-3" 
+                    />
+                    <h3 className="font-semibold truncate">{item.title}</h3>
+                    <p className="text-text-secondary text-sm truncate">{item.artist || 'AI Artist'}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Music Player Bar */}
