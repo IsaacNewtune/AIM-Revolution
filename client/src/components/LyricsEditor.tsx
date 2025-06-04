@@ -41,7 +41,12 @@ export default function LyricsEditor({ songId, audioUrl, onSave, initialLyrics =
     const audio = audioRef.current;
     if (!audio) return;
 
-    const updateTime = () => setCurrentTime(audio.currentTime);
+    const updateTime = () => {
+      // Don't update time while dragging to prevent jumping
+      if (!isDragging) {
+        setCurrentTime(audio.currentTime);
+      }
+    };
     const updateDuration = () => setDuration(audio.duration);
     const handleEnded = () => setIsPlaying(false);
 
@@ -54,7 +59,7 @@ export default function LyricsEditor({ songId, audioUrl, onSave, initialLyrics =
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, []);
+  }, [isDragging]);
 
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
@@ -116,11 +121,13 @@ export default function LyricsEditor({ songId, audioUrl, onSave, initialLyrics =
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     setIsDragging(true);
     handleTimelineInteraction(e.clientX);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    e.preventDefault();
     if (isDragging) {
       handleTimelineInteraction(e.clientX);
     }
