@@ -90,6 +90,17 @@ export const songs = pgTable("songs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Lyrics table for synchronized lyrics
+export const lyrics = pgTable("lyrics", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  songId: uuid("song_id").notNull().references(() => songs.id),
+  content: jsonb("content").notNull(), // Array of {text: string, startTime: number, endTime: number}
+  language: varchar("language").default("en"),
+  isVisible: boolean("is_visible").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Albums table
 export const albums = pgTable("albums", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -425,6 +436,12 @@ export const insertCommentLikeSchema = createInsertSchema(commentLikes).omit({
   createdAt: true,
 });
 
+export const insertLyricsSchema = createInsertSchema(lyrics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -449,3 +466,5 @@ export type ArtistReview = typeof artistReviews.$inferSelect;
 export type InsertArtistReview = z.infer<typeof insertArtistReviewSchema>;
 export type CommentLike = typeof commentLikes.$inferSelect;
 export type InsertCommentLike = z.infer<typeof insertCommentLikeSchema>;
+export type Lyrics = typeof lyrics.$inferSelect;
+export type InsertLyrics = z.infer<typeof insertLyricsSchema>;

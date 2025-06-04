@@ -138,6 +138,12 @@ export interface IStorage {
   deleteSongReview(reviewId: string, userId: string): Promise<void>;
   deleteArtistReview(reviewId: string, userId: string): Promise<void>;
   
+  // Lyrics operations
+  createLyrics(lyrics: InsertLyrics): Promise<Lyrics>;
+  getLyricsBySong(songId: string): Promise<Lyrics | undefined>;
+  updateLyrics(lyricsId: string, content: any): Promise<Lyrics>;
+  deleteLyrics(lyricsId: string): Promise<void>;
+
   // Admin operations
   getAllUsers(filters?: { accountType?: string; isActive?: boolean; isSuspended?: boolean; limit?: number; offset?: number }): Promise<{ users: User[]; total: number }>;
   suspendUser(userId: string, reason: string): Promise<void>;
