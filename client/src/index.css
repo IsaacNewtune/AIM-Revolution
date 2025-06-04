@@ -140,3 +140,29 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--ai-purple));
 }
+
+/* Fix input field functionality */
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+  background-color: hsl(var(--dark-bg)) !important;
+  color: white !important;
+  border: 1px solid #6b7280 !important;
+  caret-color: white !important;
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="text"]:focus {
+  outline: none !important;
+  border-color: hsl(var(--ai-purple)) !important;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
+}
+
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+input[type="text"]::placeholder {
+  color: #9ca3af !important;
+}

@@ -165,8 +165,10 @@ export default function AuthPage() {
                             <Input
                               {...field}
                               type="email"
+                              autoComplete="email"
                               placeholder="Enter your email"
-                              className="bg-dark-bg border-gray-600 text-white"
+                              className="bg-dark-bg border-gray-600 text-white placeholder-gray-400"
+                              style={{ caretColor: 'white' }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -249,8 +251,10 @@ export default function AuthPage() {
                             <Input
                               {...field}
                               type="email"
+                              autoComplete="email"
                               placeholder="Enter your email"
-                              className="bg-dark-bg border-gray-600 text-white"
+                              className="bg-dark-bg border-gray-600 text-white placeholder-gray-400"
+                              style={{ caretColor: 'white' }}
                             />
                           </FormControl>
                           <FormMessage />
