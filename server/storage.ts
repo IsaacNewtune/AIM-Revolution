@@ -36,7 +36,7 @@ import {
   type InsertCommentLike,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql, and, or, ilike, notInArray, count, sum, gte, lte, isNotNull, like } from "drizzle-orm";
+import { eq, desc, asc, sql, and, or, ilike, notInArray, count, sum, gte, lte, isNotNull, like } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)

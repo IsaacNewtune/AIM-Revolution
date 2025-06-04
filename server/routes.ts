@@ -589,6 +589,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced discovery endpoint with advanced filtering
+  app.get("/api/songs/discover", async (req, res) => {
+    try {
+      const { query, genre, mood, aiMethod, sortBy, tags, limit } = req.query;
+      const songs = await storage.discoverSongs({
+        query: query as string,
+        genre: genre as string,
+        mood: mood as string,
+        aiMethod: aiMethod as string,
+        sortBy: sortBy as string,
+        tags: tags ? (tags as string).split(',') : [],
+        limit: limit ? parseInt(limit as string) : 50,
+      });
+      res.json(songs);
+    } catch (error) {
+      console.error("Error discovering songs:", error);
+      res.status(500).json({ message: "Failed to discover songs" });
+    }
+  });
+
+  // Get genre statistics
+  app.get("/api/genres/stats", async (req, res) => {
+    try {
+      const stats = await storage.getGenreStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching genre stats:", error);
+      res.status(500).json({ message: "Failed to fetch genre stats" });
+    }
+  });
+
+  // Get mood statistics
+  app.get("/api/moods/stats", async (req, res) => {
+    try {
+      const stats = await storage.getMoodStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching mood stats:", error);
+      res.status(500).json({ message: "Failed to fetch mood stats" });
+    }
+  });
+
   app.get('/api/songs/recommendations', requireAuth, async (req: any, res) => {
     try {
       const userId = req.session.userId;
