@@ -135,7 +135,7 @@ export default function ArtistManagementDashboard() {
 
           <LyricsEditor
             songId={selectedSong.id}
-            audioUrl={`/uploads/${selectedSong.fileUrl}`}
+            audioUrl={selectedSong.fileUrl}
             onSave={handleSaveLyrics}
           />
         </div>
@@ -183,20 +183,32 @@ export default function ArtistManagementDashboard() {
 
           {/* Artist Info */}
           <div className="flex items-center gap-6 mb-8">
-            <img
-              src={artist?.profileImageUrl || `/api/placeholder/200/200`}
-              alt={artist?.name}
-              className="w-32 h-32 rounded-full object-cover"
-            />
-            <div>
-              <h1 className="text-4xl font-bold mb-2">{artist?.name}</h1>
+            <div className="relative">
+              <img
+                src={artist?.profileImageUrl ? `/uploads/${artist.profileImageUrl}` : `/api/placeholder/200/200`}
+                alt={artist?.name}
+                className="w-32 h-32 rounded-full object-cover"
+              />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <h1 className="text-4xl font-bold">{artist?.name}</h1>
+                <Button
+                  onClick={() => setLocation(`/edit-artist/${artistId}`)}
+                  variant="outline"
+                  className="border-ai-purple text-ai-purple hover:bg-ai-purple hover:text-white"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
+              </div>
               <p className="text-gray-400 mb-4">{artist?.bio || "AI Music Artist"}</p>
               <div className="flex gap-4">
                 <Badge variant="secondary" className="bg-ai-purple/20 text-ai-purple">
                   {songs.length} Songs
                 </Badge>
                 <Badge variant="secondary" className="bg-green-900/50 text-green-400">
-                  {artist?.monthlyListeners?.toLocaleString()} Monthly Listeners
+                  {artist?.monthlyListeners?.toLocaleString() || 0} Monthly Listeners
                 </Badge>
               </div>
             </div>
@@ -313,7 +325,7 @@ export default function ArtistManagementDashboard() {
                           className="flex items-center gap-4 p-4 border border-gray-700 rounded-lg hover:border-ai-purple/50 transition-colors"
                         >
                           <img
-                            src={song.coverArtUrl ? `/uploads/${song.coverArtUrl}` : `/api/placeholder/64/64`}
+                            src={song.coverArtUrl || `/api/placeholder/64/64`}
                             alt={song.title}
                             className="w-16 h-16 rounded-lg object-cover"
                           />
