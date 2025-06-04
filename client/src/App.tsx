@@ -30,12 +30,9 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/AuthPage";
 
 function Router() {
-  const { isAuthenticated, isLoading, user, error } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
-  // If we have an authentication error (401), treat as not authenticated
-  const isUnauthenticated = error && error.message?.includes('401');
-
-  if (isLoading && !isUnauthenticated) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-dark-bg">
         <div className="animate-spin w-8 h-8 border-4 border-ai-purple border-t-transparent rounded-full" />
@@ -43,9 +40,14 @@ function Router() {
     );
   }
 
+  // Show auth page if not authenticated
+  if (!isAuthenticated) {
+    return <AuthPage />;
+  }
+
   // If user is authenticated but doesn't have an account type set, 
   // show account setup to let them choose their role
-  const needsAccountSetup = isAuthenticated && user && !user.accountType && 
+  const needsAccountSetup = user && !user.accountType && 
     window.location.pathname !== '/account-setup';
 
   if (needsAccountSetup) {
