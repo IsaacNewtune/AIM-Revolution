@@ -120,7 +120,7 @@ export default function Landing() {
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-text-secondary mb-8 max-w-2xl mx-auto">
-            Stream, distribute, and monetize AI-generated music. The revolutionary platform where artificial intelligence meets artistic expression.
+            Upload unlimited AI-generated music, earn from streams, and connect with fans. The complete platform for AI music creators and listeners.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -175,6 +175,214 @@ export default function Landing() {
                 </p>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 px-6 bg-card-bg">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-4xl font-bold text-center mb-4">
+            Choose Your Plan
+          </h2>
+          <p className="text-xl text-text-secondary text-center mb-16 max-w-3xl mx-auto">
+            From solo creators to professional management companies, we have the perfect plan to grow your AI music career
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            {/* Artist Plan */}
+            <Card className="bg-dark-bg border-gray-800 hover:border-ai-purple transition-all transform hover:scale-105">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold mb-2">Artist</h3>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold">$4.99</span>
+                    <span className="text-text-secondary">/month</span>
+                  </div>
+                  <p className="text-text-secondary mb-6">Perfect for solo creators</p>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">Unlimited song uploads</span>
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">1 artist profile</span>
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">$0.001 per stream</span>
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">Royalty splits</span>
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">Mobile app access</span>
+                  </li>
+                </ul>
+                <Button 
+                  className="w-full bg-ai-purple hover:bg-ai-purple/90"
+                  onClick={() => setShowAccountModal(true)}
+                >
+                  Get Started
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Artist Plus Plan */}
+            <Card className="bg-dark-bg border-2 border-ai-purple transform scale-105 relative">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-gradient-to-r from-ai-purple to-ai-blue text-white px-4 py-1 rounded-full text-sm font-semibold">
+                  Most Popular
+                </span>
+              </div>
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold mb-2">Artist Plus</h3>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold">$9.99</span>
+                    <span className="text-text-secondary">/month</span>
+                  </div>
+                  <p className="text-text-secondary mb-6">For serious artists</p>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">Up to 5 artist profiles</span>
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">$0.002 per stream</span>
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">Synced lyrics editor</span>
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">Daily analytics</span>
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">Release scheduling</span>
+                  </li>
+                </ul>
+                <Button 
+                  className="w-full bg-gradient-to-r from-ai-purple to-ai-blue hover:shadow-lg"
+                  onClick={() => setShowAccountModal(true)}
+                >
+                  Choose Plus
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Manager Plan */}
+            <Card className="bg-dark-bg border-gray-800 hover:border-spotify-green transition-all transform hover:scale-105">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold mb-2">Manager</h3>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold">$12.99</span>
+                    <span className="text-text-secondary">/month</span>
+                  </div>
+                  <p className="text-text-secondary mb-6">Professional management</p>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">1-100 artist profiles</span>
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">$0.003 per stream</span>
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">Advanced dashboard</span>
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">Recommendation boost</span>
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check text-spotify-green mr-3"></i>
+                    <span className="text-sm">API access</span>
+                  </li>
+                </ul>
+                <Button 
+                  className="w-full bg-spotify-green hover:bg-spotify-green/90"
+                  onClick={() => setShowAccountModal(true)}
+                >
+                  Start Managing
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => window.location.href = "/pricing"}
+              className="border-ai-purple text-ai-purple hover:bg-ai-purple hover:text-white"
+            >
+              Compare All Features
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-4xl font-bold mb-6">
+                Built for the AI Music Revolution
+              </h2>
+              <p className="text-xl text-text-secondary mb-6">
+                AIM is the first comprehensive platform designed specifically for AI-generated music. Whether you're creating with Suno, Udio, or any other AI music tool, we provide the infrastructure to distribute, monetize, and grow your audience.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <i className="fas fa-upload text-ai-purple mr-4"></i>
+                  <span>Upload unlimited AI-generated tracks with synchronized lyrics</span>
+                </div>
+                <div className="flex items-center">
+                  <i className="fas fa-dollar-sign text-spotify-green mr-4"></i>
+                  <span>Earn revenue through streams, tips, and royalty splits</span>
+                </div>
+                <div className="flex items-center">
+                  <i className="fas fa-chart-bar text-ai-blue mr-4"></i>
+                  <span>Track performance with detailed analytics and insights</span>
+                </div>
+                <div className="flex items-center">
+                  <i className="fas fa-users text-ai-purple mr-4"></i>
+                  <span>Connect with fans and build your AI music community</span>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-card-bg p-6 rounded-lg">
+                <h4 className="text-2xl font-bold text-ai-purple mb-2">50K+</h4>
+                <p className="text-text-secondary">AI Tracks Uploaded</p>
+              </div>
+              <div className="bg-card-bg p-6 rounded-lg">
+                <h4 className="text-2xl font-bold text-spotify-green mb-2">1M+</h4>
+                <p className="text-text-secondary">Streams Generated</p>
+              </div>
+              <div className="bg-card-bg p-6 rounded-lg">
+                <h4 className="text-2xl font-bold text-ai-blue mb-2">5K+</h4>
+                <p className="text-text-secondary">Active Artists</p>
+              </div>
+              <div className="bg-card-bg p-6 rounded-lg">
+                <h4 className="text-2xl font-bold text-ai-purple mb-2">$100K+</h4>
+                <p className="text-text-secondary">Artist Earnings</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
