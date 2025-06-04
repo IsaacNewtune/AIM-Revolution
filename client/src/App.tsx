@@ -42,10 +42,8 @@ function Router() {
     );
   }
 
-  // Show auth page if not authenticated
-  if (!isAuthenticated) {
-    return <AuthPage />;
-  }
+  // Remove the automatic redirect to auth page for unauthenticated users
+  // Let the router handle showing Landing page for root path
 
   // If user is authenticated but doesn't have an account type set, 
   // show account setup to let them choose their role
