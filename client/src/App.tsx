@@ -73,6 +73,7 @@ function Router() {
         <>
           <Route path="/account-setup" component={AccountTypeSelector} />
           <Route path="/subscription-plans" component={SubscriptionPlans} />
+          <Route path="/pricing" component={SubscriptionComparison} />
           <Route path="/payment-setup" component={PaymentSetup} />
           <Route path="/" component={Home} />
           <Route path="/profile-setup" component={ProfileSetup} />
