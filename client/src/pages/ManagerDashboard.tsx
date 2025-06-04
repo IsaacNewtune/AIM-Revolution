@@ -140,7 +140,11 @@ export default function ManagerDashboard() {
               </div>
             </div>
             {topArtists.map((artist: any) => (
-              <div key={artist.id} className="p-4 border-b border-gray-700 hover:bg-gray-800 transition-colors">
+              <div 
+                key={artist.id} 
+                className="p-4 border-b border-gray-700 hover:bg-gray-800 transition-colors cursor-pointer"
+                onClick={() => setLocation(`/artist-dashboard/${artist.id}`)}
+              >
                 <div className="grid grid-cols-12 gap-4 items-center">
                   <div className="col-span-4 flex items-center space-x-4">
                     <img 
@@ -162,12 +166,12 @@ export default function ManagerDashboard() {
                   <div className="col-span-2">
                     <span className="text-spotify-green text-sm">+15.3%</span>
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-2" onClick={(e) => e.stopPropagation()}>
                     <Button 
                       variant="ghost" 
                       size="icon" 
                       className="text-ai-purple hover:text-purple-400 mr-2"
-                      onClick={() => window.location.href = `/artist-analytics/${artist.id}`}
+                      onClick={() => setLocation(`/artist-analytics/${artist.id}`)}
                     >
                       <i className="fas fa-chart-line"></i>
                     </Button>
@@ -184,7 +188,7 @@ export default function ManagerDashboard() {
                       variant="ghost" 
                       size="icon" 
                       className="text-text-secondary hover:text-white"
-                      onClick={() => window.location.href = `/edit-artist/${artist.id}`}
+                      onClick={() => setLocation(`/edit-artist/${artist.id}`)}
                     >
                       <Settings className="h-4 w-4" />
                     </Button>

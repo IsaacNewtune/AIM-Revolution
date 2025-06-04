@@ -1402,6 +1402,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Lyrics management endpoints
+  app.post('/api/songs/:songId/lyrics', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const { songId } = req.params;
+      const { content, language = 'en' } = req.body;
+
+      const user = await storage.getUser(userId);
+      if (!user || (user.accountType !== 'artist' && user.accountType !== 'manager')) {
+        return res.status(403).json({ message: "Only artists and managers can manage lyrics" });
+      }
+
+      const song = await storage.getSong(songId);
+      if (!song) {
+        return res.status(404).json({ message: "Song not found" });
+      }
+
+      // For managers, allow managing lyrics for any artist they manage
+      if (user.accountType === 'manager') {
+        const managedArtists = await storage.getArtistsByManager(userId);
+        const canManage = managedArtists.some((artist: any) => artist.id === song.artistId);
+        if (!canManage) {
+          return res.status(403).json({ message: "Can only manage lyrics for artists you manage" });
+        }
+      } else {
+        // For artists, only allow managing their own songs
+        const artist = await storage.getArtistByUserId(userId);
+        if (!artist || song.artistId !== artist.id) {
+          return res.status(403).json({ message: "Can only manage lyrics for your own songs" });
+        }
+      }
+
+      // Check if lyrics already exist
+      const existingLyrics = await storage.getLyricsBySong(songId);
+      if (existingLyrics) {
+        const updatedLyrics = await storage.updateLyrics(existingLyrics.id, content);
+        return res.json(updatedLyrics);
+      } else {
+        const lyricsData = {
+          songId,
+          content,
+          language,
+          isVisible: true
+        };
+        const lyrics = await storage.createLyrics(lyricsData);
+        return res.status(201).json(lyrics);
+      }
+    } catch (error) {
+      console.error("Lyrics creation error:", error);
+      res.status(500).json({ message: "Failed to save lyrics" });
+    }
+  });
+
+  app.get('/api/songs/:songId/lyrics', async (req: any, res) => {
+    try {
+      const { songId } = req.params;
+      const lyrics = await storage.getLyricsBySong(songId);
+      
+      if (!lyrics) {
+        return res.status(404).json({ message: "No lyrics found for this song" });
+      }
+
+      res.json(lyrics);
+    } catch (error) {
+      console.error("Lyrics fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch lyrics" });
+    }
+  });
+
+  app.delete('/api/songs/:songId/lyrics', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const { songId } = req.params;
+
+      const user = await storage.getUser(userId);
+      if (!user || (user.accountType !== 'artist' && user.accountType !== 'manager')) {
+        return res.status(403).json({ message: "Only artists and managers can delete lyrics" });
+      }
+
+      const lyrics = await storage.getLyricsBySong(songId);
+      if (!lyrics) {
+        return res.status(404).json({ message: "No lyrics found for this song" });
+      }
+
+      const song = await storage.getSong(songId);
+      
+      // For managers, allow deleting lyrics for any artist they manage
+      if (user.accountType === 'manager') {
+        const managedArtists = await storage.getArtistsByManager(userId);
+        const canManage = managedArtists.some((artist: any) => artist.id === song?.artistId);
+        if (!canManage) {
+          return res.status(403).json({ message: "Can only delete lyrics for artists you manage" });
+        }
+      } else {
+        // For artists, only allow deleting their own lyrics
+        const artist = await storage.getArtistByUserId(userId);
+        if (!artist || !song || song.artistId !== artist.id) {
+          return res.status(403).json({ message: "Can only delete lyrics for your own songs" });
+        }
+      }
+
+      await storage.deleteLyrics(lyrics.id);
+      res.json({ message: "Lyrics deleted successfully" });
+    } catch (error) {
+      console.error("Lyrics deletion error:", error);
+      res.status(500).json({ message: "Failed to delete lyrics" });
+    }
+  });
+
   app.get('/api/artists/:id/is-following', requireAuth, async (req: any, res) => {
     try {
       const userId = req.session.userId;
