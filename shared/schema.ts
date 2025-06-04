@@ -33,7 +33,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  accountType: varchar("account_type", { enum: ["listener", "artist", "manager", "admin"] }).notNull(),
+  accountType: varchar("account_type", { enum: ["listener", "artist", "manager", "admin"] }),
   password: varchar("password"), // For traditional email/password auth
   isActive: boolean("is_active").default(true),
   isSuspended: boolean("is_suspended").default(false),
