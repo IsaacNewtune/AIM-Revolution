@@ -12,6 +12,7 @@ import {
   songReviews,
   artistReviews,
   commentLikes,
+  lyrics,
   type User,
   type UpsertUser,
   type Artist,
@@ -1321,6 +1322,41 @@ export class DatabaseStorage implements IStorage {
       }
     }
     // For approve/reject, in a real app you'd update a moderation status field
+  }
+
+  // Lyrics operations
+  async createLyrics(lyricsData: InsertLyrics): Promise<Lyrics> {
+    const [lyricsResult] = await db
+      .insert(lyrics)
+      .values(lyricsData)
+      .returning();
+    return lyricsResult;
+  }
+
+  async getLyricsBySong(songId: string): Promise<Lyrics | undefined> {
+    const [lyricsResult] = await db
+      .select()
+      .from(lyrics)
+      .where(eq(lyrics.songId, songId));
+    return lyricsResult;
+  }
+
+  async updateLyrics(lyricsId: string, content: any): Promise<Lyrics> {
+    const [updated] = await db
+      .update(lyrics)
+      .set({ 
+        content,
+        updatedAt: new Date()
+      })
+      .where(eq(lyrics.id, lyricsId))
+      .returning();
+    return updated;
+  }
+
+  async deleteLyrics(lyricsId: string): Promise<void> {
+    await db
+      .delete(lyrics)
+      .where(eq(lyrics.id, lyricsId));
   }
 }
 
