@@ -31,6 +31,7 @@ export default function LyricsEditor({ songId, audioUrl, onSave, initialLyrics =
   const [selectedLineIndex, setSelectedLineIndex] = useState<number | null>(null);
   const [rawLyricsText, setRawLyricsText] = useState("");
   const [currentLineIndex, setCurrentLineIndex] = useState<number | null>(null);
+  const [playbackSpeed, setPlaybackSpeedState] = useState(1);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
@@ -79,6 +80,13 @@ export default function LyricsEditor({ songId, audioUrl, onSave, initialLyrics =
     if (!audio) return;
     audio.currentTime = time;
     setCurrentTime(time);
+  };
+
+  const setPlaybackSpeed = (speed: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.playbackRate = speed;
+    setPlaybackSpeedState(speed);
   };
 
   const formatTime = (seconds: number) => {
@@ -197,17 +205,102 @@ export default function LyricsEditor({ songId, audioUrl, onSave, initialLyrics =
             </div>
           </div>
 
-          {/* Playback Controls */}
-          <div className="flex justify-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 10))}>
-              <SkipBack className="h-4 w-4" />
-            </Button>
-            <Button onClick={togglePlayPause}>
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 10))}>
-              <SkipForward className="h-4 w-4" />
-            </Button>
+          {/* Enhanced Playback Controls */}
+          <div className="space-y-3">
+            {/* Fine Navigation Controls */}
+            <div className="flex justify-center gap-1">
+              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 30))}>
+                -30s
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 10))}>
+                -10s
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 5))}>
+                -5s
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 1))}>
+                -1s
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 0.1))}>
+                -0.1s
+              </Button>
+            </div>
+
+            {/* Main Controls */}
+            <div className="flex justify-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 10))}>
+                <SkipBack className="h-4 w-4" />
+              </Button>
+              <Button onClick={togglePlayPause} size="lg">
+                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 10))}>
+                <SkipForward className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Fine Forward Controls */}
+            <div className="flex justify-center gap-1">
+              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 0.1))}>
+                +0.1s
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 1))}>
+                +1s
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 5))}>
+                +5s
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 10))}>
+                +10s
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 30))}>
+                +30s
+              </Button>
+            </div>
+
+            {/* Playback Speed Controls */}
+            <div className="space-y-2">
+              <div className="text-center text-sm text-gray-600">
+                Playback Speed: {playbackSpeed}x
+              </div>
+              <div className="flex justify-center gap-2">
+                <Button 
+                  variant={playbackSpeed === 0.5 ? "default" : "outline"} 
+                  size="sm" 
+                  onClick={() => setPlaybackSpeed(0.5)}
+                >
+                  0.5x
+                </Button>
+                <Button 
+                  variant={playbackSpeed === 0.75 ? "default" : "outline"} 
+                  size="sm" 
+                  onClick={() => setPlaybackSpeed(0.75)}
+                >
+                  0.75x
+                </Button>
+                <Button 
+                  variant={playbackSpeed === 1 ? "default" : "outline"} 
+                  size="sm" 
+                  onClick={() => setPlaybackSpeed(1)}
+                >
+                  1x
+                </Button>
+                <Button 
+                  variant={playbackSpeed === 1.25 ? "default" : "outline"} 
+                  size="sm" 
+                  onClick={() => setPlaybackSpeed(1.25)}
+                >
+                  1.25x
+                </Button>
+                <Button 
+                  variant={playbackSpeed === 1.5 ? "default" : "outline"} 
+                  size="sm" 
+                  onClick={() => setPlaybackSpeed(1.5)}
+                >
+                  1.5x
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Current Time Display */}
