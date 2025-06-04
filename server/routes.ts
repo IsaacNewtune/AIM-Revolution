@@ -90,15 +90,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(session(sessionSettings));
 
   // Auth routes
-  app.get('/api/auth/user', requireAuth, async (req: any, res) => {
+  app.post('/api/auth/register', async (req, res) => {
     try {
+      const { email, password, firstName, lastName } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user with hashed password
+      const newUser = await storage.upsertUser({
+        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        email,
+        password: hashedPassword,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        accountType: 'listener',
+        profileImageUrl: null,
+        isActive: true,
+        isSuspended: false,
+        suspensionReason: null,
+        creditBalance: "0",
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        subscriptionTier: 'free',
+      });
+
+      // Create session
+      (req as any).session.userId = newUser.id;
+      
+      res.status(201).json({ 
+        message: "User created successfully",
+        user: { ...newUser, password: undefined }
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      // Find user
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // For development, if user doesn't have a password, set one
+      if (!user.password) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await storage.upsertUser({ ...user, password: hashedPassword });
+      } else {
+        // Verify password
+        const isValid = await bcrypt.compare(password, user.password);
+        if (!isValid) {
+          return res.status(401).json({ message: "Invalid credentials" });
+        }
+      }
+
+      // Create session
+      (req as any).session.userId = user.id;
+      
+      res.json({ 
+        message: "Login successful",
+        user: { ...user, password: undefined }
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post('/api/auth/logout', (req: any, res) => {
+    req.session.destroy((err: any) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ message: "Logout successful" });
+    });
+  });
+
+  app.get('/api/auth/user', async (req: any, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       const user = await storage.getUser(req.session.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      // Remove password from response
-      const { password, ...userResponse } = user;
-      res.json(userResponse);
+      
+      res.json({ ...user, password: undefined });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

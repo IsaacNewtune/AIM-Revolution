@@ -1,33 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
 
 export function useAuth() {
   const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/auth/user"],
-    queryFn: async () => {
-      const res = await fetch("/api/auth/user", {
-        credentials: "include",
-      });
-      
-      if (res.status === 401) {
-        return null; // Return null for unauthenticated users
-      }
-      
-      if (!res.ok) {
-        throw new Error(`${res.status}: ${res.statusText}`);
-      }
-      
-      return res.json();
-    },
+    queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnMount: true,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   return {
     user,
     isLoading,
-    isAuthenticated: !!user,
     error,
+    isAuthenticated: !!user,
   };
 }
