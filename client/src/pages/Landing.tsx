@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 export default function Landing() {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showListenerPlans, setShowListenerPlans] = useState(true);
 
   const selectAccountType = (type: string) => {
     // Store account type preference in localStorage for the setup flow
@@ -186,141 +187,298 @@ export default function Landing() {
             Choose Your Plan
           </h2>
           <p className="text-xl text-text-secondary text-center mb-16 max-w-3xl mx-auto">
-            From solo creators to professional management companies, we have the perfect plan to grow your AI music career
+            From music listeners to professional management companies, we have the perfect plan for everyone
           </p>
-          
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            {/* Artist Plan */}
-            <Card className="bg-dark-bg border-gray-800 hover:border-ai-purple transition-all transform hover:scale-105">
-              <CardContent className="p-8">
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold mb-2">Artist</h3>
-                  <div className="mb-4">
-                    <span className="text-4xl font-bold">$4.99</span>
-                    <span className="text-text-secondary">/month</span>
-                  </div>
-                  <p className="text-text-secondary mb-6">Perfect for solo creators</p>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">Unlimited song uploads</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">1 artist profile</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">$0.001 per stream</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">Royalty splits</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">Mobile app access</span>
-                  </li>
-                </ul>
-                <Button 
-                  className="w-full bg-ai-purple hover:bg-ai-purple/90"
-                  onClick={() => setShowAccountModal(true)}
-                >
-                  Get Started
-                </Button>
-              </CardContent>
-            </Card>
 
-            {/* Artist Plus Plan */}
-            <Card className="bg-dark-bg border-2 border-ai-purple transform scale-105 relative">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-gradient-to-r from-ai-purple to-ai-blue text-white px-4 py-1 rounded-full text-sm font-semibold">
-                  Most Popular
-                </span>
-              </div>
-              <CardContent className="p-8">
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold mb-2">Artist Plus</h3>
-                  <div className="mb-4">
-                    <span className="text-4xl font-bold">$9.99</span>
-                    <span className="text-text-secondary">/month</span>
-                  </div>
-                  <p className="text-text-secondary mb-6">For serious artists</p>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">Up to 5 artist profiles</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">$0.002 per stream</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">Synced lyrics editor</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">Daily analytics</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">Release scheduling</span>
-                  </li>
-                </ul>
-                <Button 
-                  className="w-full bg-gradient-to-r from-ai-purple to-ai-blue hover:shadow-lg"
-                  onClick={() => setShowAccountModal(true)}
-                >
-                  Choose Plus
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Manager Plan */}
-            <Card className="bg-dark-bg border-gray-800 hover:border-spotify-green transition-all transform hover:scale-105">
-              <CardContent className="p-8">
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold mb-2">Manager</h3>
-                  <div className="mb-4">
-                    <span className="text-4xl font-bold">$12.99</span>
-                    <span className="text-text-secondary">/month</span>
-                  </div>
-                  <p className="text-text-secondary mb-6">Professional management</p>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">1-100 artist profiles</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">$0.003 per stream</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">Advanced dashboard</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">Recommendation boost</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check text-spotify-green mr-3"></i>
-                    <span className="text-sm">API access</span>
-                  </li>
-                </ul>
-                <Button 
-                  className="w-full bg-spotify-green hover:bg-spotify-green/90"
-                  onClick={() => setShowAccountModal(true)}
-                >
-                  Start Managing
-                </Button>
-              </CardContent>
-            </Card>
+          {/* Plan Type Selector */}
+          <div className="flex justify-center mb-12">
+            <div className="flex bg-dark-bg rounded-full p-1">
+              <Button
+                variant={showListenerPlans ? "default" : "ghost"}
+                onClick={() => setShowListenerPlans(true)}
+                className="rounded-full px-6 py-2"
+              >
+                Listener Plans
+              </Button>
+              <Button
+                variant={!showListenerPlans ? "default" : "ghost"}
+                onClick={() => setShowListenerPlans(false)}
+                className="rounded-full px-6 py-2"
+              >
+                Creator Plans
+              </Button>
+            </div>
           </div>
+          
+          {showListenerPlans ? (
+            // Listener Plans
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              {/* Free Listener */}
+              <Card className="bg-dark-bg border-gray-800 hover:border-ai-purple transition-all transform hover:scale-105">
+                <CardContent className="p-8">
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold mb-2">Free</h3>
+                    <div className="mb-4">
+                      <span className="text-4xl font-bold">$0</span>
+                      <span className="text-text-secondary">/month</span>
+                    </div>
+                    <p className="text-text-secondary mb-6">Basic listening experience</p>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Limited streaming with ads</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Basic playlist creation</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">AI music discovery</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-times text-red-500 mr-3"></i>
+                      <span className="text-sm text-text-secondary">No offline listening</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-times text-red-500 mr-3"></i>
+                      <span className="text-sm text-text-secondary">No high-quality audio</span>
+                    </li>
+                  </ul>
+                  <Button 
+                    className="w-full bg-ai-purple hover:bg-ai-purple/90"
+                    onClick={() => window.location.href = "/signup?plan=listener-free"}
+                  >
+                    Get Started Free
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Premium Listener */}
+              <Card className="bg-dark-bg border-2 border-ai-purple transform scale-105 relative">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-gradient-to-r from-ai-purple to-ai-blue text-white px-4 py-1 rounded-full text-sm font-semibold">
+                    Most Popular
+                  </span>
+                </div>
+                <CardContent className="p-8">
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold mb-2">Premium</h3>
+                    <div className="mb-4">
+                      <span className="text-4xl font-bold">$3.99</span>
+                      <span className="text-text-secondary">/month</span>
+                    </div>
+                    <p className="text-text-secondary mb-6">Ad-free premium experience</p>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Unlimited ad-free streaming</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">High-quality audio</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Offline downloads</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Direct artist tipping</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Unlimited playlists</span>
+                    </li>
+                  </ul>
+                  <Button 
+                    className="w-full bg-gradient-to-r from-ai-purple to-ai-blue hover:shadow-lg"
+                    onClick={() => window.location.href = "/signup?plan=listener-premium"}
+                  >
+                    Go Premium
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* VIP Listener */}
+              <Card className="bg-dark-bg border-gray-800 hover:border-spotify-green transition-all transform hover:scale-105">
+                <CardContent className="p-8">
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold mb-2">VIP</h3>
+                    <div className="mb-4">
+                      <span className="text-4xl font-bold">$7.99</span>
+                      <span className="text-text-secondary">/month</span>
+                    </div>
+                    <p className="text-text-secondary mb-6">Ultimate listening experience</p>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Everything in Premium</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Lossless audio quality</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Early access to new releases</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Exclusive artist content</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Priority customer support</span>
+                    </li>
+                  </ul>
+                  <Button 
+                    className="w-full bg-spotify-green hover:bg-spotify-green/90"
+                    onClick={() => window.location.href = "/signup?plan=listener-vip"}
+                  >
+                    Join VIP
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            // Creator Plans
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              {/* Artist Plan */}
+              <Card className="bg-dark-bg border-gray-800 hover:border-ai-purple transition-all transform hover:scale-105">
+                <CardContent className="p-8">
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold mb-2">Artist</h3>
+                    <div className="mb-4">
+                      <span className="text-4xl font-bold">$4.99</span>
+                      <span className="text-text-secondary">/month</span>
+                    </div>
+                    <p className="text-text-secondary mb-6">Perfect for solo creators</p>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Unlimited song uploads</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">1 artist profile</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">$0.001 per stream</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Royalty splits</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Mobile app access</span>
+                    </li>
+                  </ul>
+                  <Button 
+                    className="w-full bg-ai-purple hover:bg-ai-purple/90"
+                    onClick={() => window.location.href = "/signup?plan=artist"}
+                  >
+                    Get Started
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Artist Plus Plan */}
+              <Card className="bg-dark-bg border-2 border-ai-purple transform scale-105 relative">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-gradient-to-r from-ai-purple to-ai-blue text-white px-4 py-1 rounded-full text-sm font-semibold">
+                    Most Popular
+                  </span>
+                </div>
+                <CardContent className="p-8">
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold mb-2">Artist Plus</h3>
+                    <div className="mb-4">
+                      <span className="text-4xl font-bold">$9.99</span>
+                      <span className="text-text-secondary">/month</span>
+                    </div>
+                    <p className="text-text-secondary mb-6">For serious artists</p>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Up to 5 artist profiles</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">$0.002 per stream</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Synced lyrics editor</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Daily analytics</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Release scheduling</span>
+                    </li>
+                  </ul>
+                  <Button 
+                    className="w-full bg-gradient-to-r from-ai-purple to-ai-blue hover:shadow-lg"
+                    onClick={() => window.location.href = "/signup?plan=artist-plus"}
+                  >
+                    Choose Plus
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Manager Plan */}
+              <Card className="bg-dark-bg border-gray-800 hover:border-spotify-green transition-all transform hover:scale-105">
+                <CardContent className="p-8">
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold mb-2">Manager</h3>
+                    <div className="mb-4">
+                      <span className="text-4xl font-bold">$12.99</span>
+                      <span className="text-text-secondary">/month</span>
+                    </div>
+                    <p className="text-text-secondary mb-6">Professional management</p>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">1-100 artist profiles</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">$0.003 per stream</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Advanced dashboard</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">Recommendation boost</span>
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-spotify-green mr-3"></i>
+                      <span className="text-sm">API access</span>
+                    </li>
+                  </ul>
+                  <Button 
+                    className="w-full bg-spotify-green hover:bg-spotify-green/90"
+                    onClick={() => window.location.href = "/signup?plan=manager"}
+                  >
+                    Start Managing
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           <div className="text-center">
             <Button
