@@ -27,13 +27,15 @@ export default function SubscriptionPlans() {
             name: 'Free Listener',
             price: '$0',
             period: '/month',
-            description: 'Basic music streaming with ads',
+            description: 'Discover AI music with basic features',
             features: [
-              'Stream music with ads',
-              'Basic playlist creation',
-              'Community features',
-              'Standard audio quality',
-              'Follow artists and leave reviews'
+              'Stream music with ads (limited skips)',
+              'Basic playlist creation (up to 10 playlists)',
+              'Community features and reviews',
+              'Standard audio quality (128kbps)',
+              'Follow artists and leave comments',
+              'Limited offline downloads (5 songs)',
+              'Basic AI music discovery'
             ],
             buttonText: 'Start Free',
             popular: false
@@ -43,14 +45,20 @@ export default function SubscriptionPlans() {
             name: 'Premium Listener',
             price: '$4.99',
             period: '/month',
-            description: 'Ad-free music streaming experience',
+            description: 'Ultimate AI music experience without limits',
             features: [
               'Unlimited ad-free streaming',
-              'High-quality audio',
-              'Offline downloads',
-              'Advanced playlist features',
-              'Early access to new releases',
-              'Support artists with streams'
+              'High-quality audio (320kbps + lossless)',
+              'Unlimited offline downloads',
+              'Unlimited playlist creation',
+              'Early access to new AI releases',
+              'Support artists with paid streams',
+              'Advanced AI music recommendations',
+              'Exclusive behind-the-scenes content',
+              'Priority customer support',
+              'Social sharing features',
+              'Concert and event notifications',
+              'Lyrics display with timing'
             ],
             buttonText: 'Go Premium',
             popular: true
@@ -60,19 +68,50 @@ export default function SubscriptionPlans() {
         return [
           {
             id: 'artist',
-            name: 'Artist Subscription',
-            price: '$5.99',
+            name: 'Artist',
+            price: '$4.99',
             period: '/month',
-            description: 'Upload and monetize your AI music',
+            description: 'Perfect for solo artists and small creators',
             features: [
-              'Upload unlimited AI-generated music',
-              'Earn revenue from paid subscribers',
-              'Detailed analytics and insights',
-              'Fan engagement tools',
-              'Music distribution platform',
-              'Artist profile customization'
+              '∞ Upload unlimited songs and lyrics',
+              'Create royalty splits with other artists',
+              'Mobile app access',
+              '1 artist or band profile',
+              'Receive tips from any subscriber',
+              'Receive $0.001 per stream (paid subscribers)',
+              'Basic streaming analytics',
+              'Community engagement tools',
+              'Artist profile customization',
+              'Direct fan messaging',
+              'Social media integration'
             ],
-            buttonText: 'Subscribe as Artist',
+            buttonText: 'Start Creating',
+            popular: false
+          },
+          {
+            id: 'artist-plus',
+            name: 'Artist Plus',
+            price: '$9.99',
+            period: '/month',
+            description: 'Enhanced features for serious artists',
+            features: [
+              'Up to 5 artists or bands',
+              '∞ Upload unlimited songs and lyrics',
+              'Create royalty splits with other artists',
+              'Mobile app access',
+              'Synced lyrics with timing editor',
+              'Daily streaming stats & analytics',
+              'Customize release and preorder dates',
+              'Customizable song and album pricing',
+              'Receive tips from any subscriber',
+              'Receive $0.002 per stream (paid subscribers)',
+              'Advanced fan demographics',
+              'Playlist submission tools',
+              'Music video uploads',
+              'Merchandise integration',
+              'Priority customer support'
+            ],
+            buttonText: 'Go Plus',
             popular: true
           }
         ];
@@ -80,20 +119,35 @@ export default function SubscriptionPlans() {
         return [
           {
             id: 'manager',
-            name: 'Manager Subscription',
+            name: 'Manager',
             price: '$12.99',
             period: '/month',
-            description: 'Manage multiple artists professionally',
+            description: 'Professional artist management at scale',
             features: [
-              'Manage multiple artists',
-              'Revenue sharing tools (15% default)',
-              'Analytics across all managed artists',
-              'Professional artist management dashboard',
-              'Bulk operations for multiple artists',
-              'Advanced reporting and insights',
-              'Priority support for managers'
+              'Manage 1-100 artists or bands',
+              '∞ Upload unlimited songs and lyrics',
+              'Create royalty splits with other artists',
+              'Mobile app access',
+              'Synced lyrics with timing editor',
+              'Daily streaming stats & analytics',
+              'Customize release and preorder dates',
+              'Customizable song and album pricing',
+              'Receive tips from any subscriber',
+              'Receive $0.003 per stream (paid subscribers)',
+              'Monitor music and revenue in advanced dashboard',
+              'Option to add artists to top of recommendations',
+              'Bulk upload and management tools',
+              'White-label artist profiles',
+              'Revenue split automation (customizable %)',
+              'Advanced analytics across all artists',
+              'Artist performance comparisons',
+              'Promotional campaign tools',
+              'Direct label and distributor connections',
+              'Priority playlist placements',
+              'Dedicated account manager',
+              'API access for integrations'
             ],
-            buttonText: 'Subscribe as Manager',
+            buttonText: 'Manage Artists',
             popular: true
           }
         ];

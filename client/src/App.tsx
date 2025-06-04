@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/Landing";
 import SignUp from "@/pages/SignUp";
 import SubscriptionPlans from "@/pages/SubscriptionPlans";
+import SubscriptionComparison from "@/pages/SubscriptionComparison";
 import PaymentSetup from "@/pages/PaymentSetup";
 import ProfileSetup from "@/pages/ProfileSetup";
 import Home from "@/pages/Home";
@@ -65,6 +66,7 @@ function Router() {
           <Route path="/artist-signup" component={ArtistSignUp} />
           <Route path="/manager-signup" component={ManagerSignUp} />
           <Route path="/subscription-plans" component={SubscriptionPlans} />
+          <Route path="/pricing" component={SubscriptionComparison} />
           <Route path="/payment-setup" component={PaymentSetup} />
         </>
       ) : (
