@@ -31,9 +31,10 @@ export default function LyricsEditor({ songId, audioUrl, onSave, initialLyrics =
   const [selectedLineIndex, setSelectedLineIndex] = useState<number | null>(null);
   const [rawLyricsText, setRawLyricsText] = useState("");
   const [currentLineIndex, setCurrentLineIndex] = useState<number | null>(null);
-  const [playbackSpeed, setPlaybackSpeedState] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -54,6 +55,28 @@ export default function LyricsEditor({ songId, audioUrl, onSave, initialLyrics =
       audio.removeEventListener('ended', handleEnded);
     };
   }, []);
+
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        handleTimelineInteraction(e.clientX);
+      }
+    };
+
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging]);
 
   // Find current playing lyric line
   useEffect(() => {
@@ -82,11 +105,44 @@ export default function LyricsEditor({ songId, audioUrl, onSave, initialLyrics =
     setCurrentTime(time);
   };
 
-  const setPlaybackSpeed = (speed: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.playbackRate = speed;
-    setPlaybackSpeedState(speed);
+  const handleTimelineInteraction = (clientX: number) => {
+    const timeline = timelineRef.current;
+    if (!timeline || duration === 0) return;
+
+    const rect = timeline.getBoundingClientRect();
+    const clickX = clientX - rect.left;
+    const clickTime = (clickX / rect.width) * duration;
+    seekAudio(Math.max(0, Math.min(duration, clickTime)));
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    handleTimelineInteraction(e.clientX);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      handleTimelineInteraction(e.clientX);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    handleTimelineInteraction(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isDragging) {
+      handleTimelineInteraction(e.touches[0].clientX);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
   };
 
   const formatTime = (seconds: number) => {
@@ -181,18 +237,32 @@ export default function LyricsEditor({ songId, audioUrl, onSave, initialLyrics =
               <span>{formatTime(duration)}</span>
             </div>
             <div 
-              className="w-full h-2 bg-gray-200 rounded-full cursor-pointer relative"
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const clickTime = (clickX / rect.width) * duration;
-                seekAudio(clickTime);
-              }}
+              ref={timelineRef}
+              className={`w-full h-4 bg-gray-200 rounded-full cursor-pointer relative select-none ${
+                isDragging ? 'bg-gray-300' : ''
+              }`}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
+              {/* Progress bar */}
               <div 
-                className="h-full bg-ai-purple rounded-full"
-                style={{ width: `${(currentTime / duration) * 100}%` }}
+                className="h-full bg-ai-purple rounded-full transition-none"
+                style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
               />
+              
+              {/* Draggable scrubber handle */}
+              <div 
+                className={`absolute top-1/2 w-6 h-6 bg-white border-2 border-ai-purple rounded-full transform -translate-y-1/2 shadow-lg transition-transform ${
+                  isDragging ? 'scale-110' : 'hover:scale-105'
+                }`}
+                style={{ left: `calc(${duration > 0 ? (currentTime / duration) * 100 : 0}% - 12px)` }}
+              />
+              
               {/* Lyric markers */}
               {lyrics.map((line, index) => (
                 <div
@@ -205,102 +275,17 @@ export default function LyricsEditor({ songId, audioUrl, onSave, initialLyrics =
             </div>
           </div>
 
-          {/* Enhanced Playback Controls */}
-          <div className="space-y-3">
-            {/* Fine Navigation Controls */}
-            <div className="flex justify-center gap-1">
-              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 30))}>
-                -30s
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 10))}>
-                -10s
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 5))}>
-                -5s
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 1))}>
-                -1s
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 0.1))}>
-                -0.1s
-              </Button>
-            </div>
-
-            {/* Main Controls */}
-            <div className="flex justify-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 10))}>
-                <SkipBack className="h-4 w-4" />
-              </Button>
-              <Button onClick={togglePlayPause} size="lg">
-                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 10))}>
-                <SkipForward className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Fine Forward Controls */}
-            <div className="flex justify-center gap-1">
-              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 0.1))}>
-                +0.1s
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 1))}>
-                +1s
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 5))}>
-                +5s
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 10))}>
-                +10s
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 30))}>
-                +30s
-              </Button>
-            </div>
-
-            {/* Playback Speed Controls */}
-            <div className="space-y-2">
-              <div className="text-center text-sm text-gray-600">
-                Playback Speed: {playbackSpeed}x
-              </div>
-              <div className="flex justify-center gap-2">
-                <Button 
-                  variant={playbackSpeed === 0.5 ? "default" : "outline"} 
-                  size="sm" 
-                  onClick={() => setPlaybackSpeed(0.5)}
-                >
-                  0.5x
-                </Button>
-                <Button 
-                  variant={playbackSpeed === 0.75 ? "default" : "outline"} 
-                  size="sm" 
-                  onClick={() => setPlaybackSpeed(0.75)}
-                >
-                  0.75x
-                </Button>
-                <Button 
-                  variant={playbackSpeed === 1 ? "default" : "outline"} 
-                  size="sm" 
-                  onClick={() => setPlaybackSpeed(1)}
-                >
-                  1x
-                </Button>
-                <Button 
-                  variant={playbackSpeed === 1.25 ? "default" : "outline"} 
-                  size="sm" 
-                  onClick={() => setPlaybackSpeed(1.25)}
-                >
-                  1.25x
-                </Button>
-                <Button 
-                  variant={playbackSpeed === 1.5 ? "default" : "outline"} 
-                  size="sm" 
-                  onClick={() => setPlaybackSpeed(1.5)}
-                >
-                  1.5x
-                </Button>
-              </div>
-            </div>
+          {/* Playback Controls */}
+          <div className="flex justify-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => seekAudio(Math.max(0, currentTime - 10))}>
+              <SkipBack className="h-4 w-4" />
+            </Button>
+            <Button onClick={togglePlayPause}>
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => seekAudio(Math.min(duration, currentTime + 10))}>
+              <SkipForward className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Current Time Display */}
