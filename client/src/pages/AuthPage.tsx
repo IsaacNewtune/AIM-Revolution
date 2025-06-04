@@ -203,91 +203,67 @@ export default function AuthPage() {
                   </form>
                 </Form>
               ) : (
-                <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={registerForm.control}
-                        name="firstName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-white">First Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="First name"
-                                className="bg-dark-bg border-gray-600 text-white"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-white text-sm font-medium mb-1 block">First Name</label>
+                      <input
+                        {...registerForm.register('firstName')}
+                        type="text"
+                        placeholder="First name"
+                        className="w-full px-3 py-2 bg-dark-bg border border-gray-600 text-white rounded-md focus:border-ai-purple focus:outline-none"
                       />
-                      <FormField
-                        control={registerForm.control}
-                        name="lastName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-white">Last Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="Last name"
-                                className="bg-dark-bg border-gray-600 text-white"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      {registerForm.formState.errors.firstName && (
+                        <p className="text-red-500 text-sm mt-1">{registerForm.formState.errors.firstName.message}</p>
+                      )}
                     </div>
-                    <FormField
-                      control={registerForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Email</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="email"
-                              autoComplete="email"
-                              placeholder="Enter your email"
-                              className="bg-dark-bg border-gray-600 text-white placeholder-gray-400"
-                              style={{ caretColor: 'white' }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                    <div>
+                      <label className="text-white text-sm font-medium mb-1 block">Last Name</label>
+                      <input
+                        {...registerForm.register('lastName')}
+                        type="text"
+                        placeholder="Last name"
+                        className="w-full px-3 py-2 bg-dark-bg border border-gray-600 text-white rounded-md focus:border-ai-purple focus:outline-none"
+                      />
+                      {registerForm.formState.errors.lastName && (
+                        <p className="text-red-500 text-sm mt-1">{registerForm.formState.errors.lastName.message}</p>
                       )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-white text-sm font-medium mb-1 block">Email</label>
+                    <input
+                      {...registerForm.register('email')}
+                      type="email"
+                      autoComplete="email"
+                      placeholder="Enter your email"
+                      className="w-full px-3 py-2 bg-dark-bg border border-gray-600 text-white rounded-md focus:border-ai-purple focus:outline-none placeholder-gray-400"
+                      style={{ caretColor: 'white' }}
                     />
-                    <FormField
-                      control={registerForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Password</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="password"
-                              placeholder="Create a password"
-                              className="bg-dark-bg border-gray-600 text-white"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                    {registerForm.formState.errors.email && (
+                      <p className="text-red-500 text-sm mt-1">{registerForm.formState.errors.email.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-white text-sm font-medium mb-1 block">Password</label>
+                    <input
+                      {...registerForm.register('password')}
+                      type="password"
+                      placeholder="Create a password"
+                      className="w-full px-3 py-2 bg-dark-bg border border-gray-600 text-white rounded-md focus:border-ai-purple focus:outline-none"
                     />
-                    <Button
-                      type="submit"
-                      className="w-full bg-gradient-to-r from-ai-purple to-ai-blue text-white"
-                      disabled={registerMutation.isPending}
-                    >
-                      {registerMutation.isPending ? 'Creating account...' : 'Create Account'}
-                    </Button>
-                  </form>
-                </Form>
+                    {registerForm.formState.errors.password && (
+                      <p className="text-red-500 text-sm mt-1">{registerForm.formState.errors.password.message}</p>
+                    )}
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-ai-purple to-ai-blue text-white"
+                    disabled={registerMutation.isPending}
+                  >
+                    {registerMutation.isPending ? 'Creating account...' : 'Create Account'}
+                  </Button>
+                </form>
               )}
 
               <div className="text-center">
