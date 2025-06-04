@@ -107,14 +107,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create user with hashed password
+      // Create user with hashed password (no account type set initially)
       const newUser = await storage.upsertUser({
         id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         email,
         password: hashedPassword,
         firstName: firstName || null,
         lastName: lastName || null,
-        accountType: 'listener',
+        accountType: null, // Set to null so user is directed to account selection
         profileImageUrl: null,
         isActive: true,
         isSuspended: false,

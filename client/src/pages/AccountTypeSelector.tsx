@@ -57,11 +57,15 @@ export default function AccountTypeSelector() {
       title: "Music Listener",
       description: "Discover and stream AI-generated music",
       icon: Users,
+      price: "Free",
+      priceDetail: "Forever",
+      isFree: true,
       features: [
         "Stream unlimited music",
         "Create custom playlists",
         "Follow your favorite artists",
-        "Leave reviews and comments"
+        "Leave reviews and comments",
+        "Basic discovery features"
       ]
     },
     {
@@ -69,11 +73,16 @@ export default function AccountTypeSelector() {
       title: "Music Artist",
       description: "Upload and monetize your AI-generated music",
       icon: Music,
+      price: "$5.99",
+      priceDetail: "per month",
+      isFree: false,
       features: [
         "Upload and distribute music",
-        "Earn revenue from streams",
-        "Analytics and insights",
-        "Fan engagement tools"
+        "Earn revenue from streams and tips",
+        "Analytics and insights dashboard",
+        "Fan engagement tools",
+        "AI generation assistance",
+        "Artist profile customization"
       ]
     },
     {
@@ -81,11 +90,16 @@ export default function AccountTypeSelector() {
       title: "Artist Manager",
       description: "Manage multiple artists and their careers",
       icon: Briefcase,
+      price: "$12.99",
+      priceDetail: "per month",
+      isFree: false,
       features: [
         "Manage multiple artists",
-        "Revenue sharing tools",
-        "Analytics across artists",
-        "Professional dashboard"
+        "Revenue sharing (15% commission)",
+        "Analytics across all artists",
+        "Professional dashboard",
+        "Commission tracking",
+        "Priority support"
       ]
     }
   ];
