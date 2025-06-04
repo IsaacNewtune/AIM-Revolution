@@ -67,6 +67,19 @@ export interface IStorage {
   getRecommendedSongs(userId: string): Promise<Song[]>;
   updateSongStats(songId: string, streamCount: number, revenue: string): Promise<void>;
   
+  // Enhanced discovery
+  discoverSongs(filters: { 
+    query?: string; 
+    genre?: string; 
+    mood?: string; 
+    aiMethod?: string; 
+    sortBy?: string; 
+    tags?: string[]; 
+    limit?: number; 
+  }): Promise<Song[]>;
+  getGenreStats(): Promise<Array<{ name: string; count: number }>>;
+  getMoodStats(): Promise<Array<{ name: string; count: number }>>;
+  
   // Tip operations
   createTip(tip: InsertTip): Promise<Tip>;
   getTipsByArtist(artistId: number): Promise<Array<Tip & { user: { firstName: string | null; lastName: string | null; profileImageUrl: string | null } }>>;
@@ -473,7 +486,128 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSongStats(songId: string, streamCount: number, revenue: string): Promise<void> {
-    await db.update(songs).set({ streamCount, revenue }).where(eq(songs.id, songId));
+    await db.update(songs).set({ streamCount, totalRevenue: revenue }).where(eq(songs.id, songId));
+  }
+
+  async discoverSongs(filters: { 
+    query?: string; 
+    genre?: string; 
+    mood?: string; 
+    aiMethod?: string; 
+    sortBy?: string; 
+    tags?: string[]; 
+    limit?: number; 
+  }): Promise<Song[]> {
+    let queryBuilder = db
+      .select({
+        id: songs.id,
+        artistId: songs.artistId,
+        title: songs.title,
+        description: songs.description,
+        fileUrl: songs.fileUrl,
+        coverArtUrl: songs.coverArtUrl,
+        duration: songs.duration,
+        aiGenerationMethod: songs.aiGenerationMethod,
+        genre: songs.genre,
+        mood: songs.mood,
+        tags: songs.tags,
+        streamCount: songs.streamCount,
+        totalRevenue: songs.totalRevenue,
+        isPublished: songs.isPublished,
+        createdAt: songs.createdAt,
+        artistName: artists.name,
+        artistProfileImageUrl: artists.profileImageUrl,
+      })
+      .from(songs)
+      .leftJoin(artists, eq(songs.artistId, artists.id));
+
+    // Apply filters
+    const conditions = [eq(songs.isPublished, true)];
+
+    if (filters.query) {
+      conditions.push(
+        or(
+          ilike(songs.title, `%${filters.query}%`),
+          ilike(songs.description, `%${filters.query}%`),
+          ilike(artists.name, `%${filters.query}%`)
+        )
+      );
+    }
+
+    if (filters.genre) {
+      conditions.push(eq(songs.genre, filters.genre));
+    }
+
+    if (filters.mood) {
+      conditions.push(eq(songs.mood, filters.mood));
+    }
+
+    if (filters.aiMethod) {
+      conditions.push(eq(songs.aiGenerationMethod, filters.aiMethod as any));
+    }
+
+    queryBuilder = queryBuilder.where(and(...conditions));
+
+    // Apply sorting
+    switch (filters.sortBy) {
+      case 'oldest':
+        queryBuilder = queryBuilder.orderBy(asc(songs.createdAt));
+        break;
+      case 'most_streamed':
+        queryBuilder = queryBuilder.orderBy(desc(songs.streamCount));
+        break;
+      case 'trending':
+        queryBuilder = queryBuilder.orderBy(desc(songs.streamCount), desc(songs.createdAt));
+        break;
+      case 'alphabetical':
+        queryBuilder = queryBuilder.orderBy(asc(songs.title));
+        break;
+      default: // newest
+        queryBuilder = queryBuilder.orderBy(desc(songs.createdAt));
+        break;
+    }
+
+    if (filters.limit) {
+      queryBuilder = queryBuilder.limit(filters.limit);
+    }
+
+    return await queryBuilder as Song[];
+  }
+
+  async getGenreStats(): Promise<Array<{ name: string; count: number }>> {
+    const stats = await db
+      .select({
+        name: songs.genre,
+        count: count(songs.id)
+      })
+      .from(songs)
+      .where(and(eq(songs.isPublished, true), isNotNull(songs.genre)))
+      .groupBy(songs.genre)
+      .orderBy(desc(count(songs.id)))
+      .limit(12);
+
+    return stats.filter(stat => stat.name).map(stat => ({
+      name: stat.name!,
+      count: stat.count
+    }));
+  }
+
+  async getMoodStats(): Promise<Array<{ name: string; count: number }>> {
+    const stats = await db
+      .select({
+        name: songs.mood,
+        count: count(songs.id)
+      })
+      .from(songs)
+      .where(and(eq(songs.isPublished, true), isNotNull(songs.mood)))
+      .groupBy(songs.mood)
+      .orderBy(desc(count(songs.id)))
+      .limit(12);
+
+    return stats.filter(stat => stat.name).map(stat => ({
+      name: stat.name!,
+      count: stat.count
+    }));
   }
 
   // Tip operations
