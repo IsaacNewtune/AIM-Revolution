@@ -1184,6 +1184,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Artist detail routes
+  app.get('/api/artists/:id', async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const artist = await storage.getArtistById(artistId);
+      if (!artist) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+      res.json(artist);
+    } catch (error) {
+      console.error("Error fetching artist:", error);
+      res.status(500).json({ message: "Failed to fetch artist" });
+    }
+  });
+
+  app.get('/api/artists/:id/songs', async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const songs = await storage.getSongsByArtist(artistId);
+      
+      // Check if each song has lyrics
+      const songsWithLyricsStatus = await Promise.all(
+        songs.map(async (song) => {
+          const lyrics = await storage.getLyricsBySong(song.id);
+          return {
+            ...song,
+            hasLyrics: !!lyrics
+          };
+        })
+      );
+      
+      res.json(songsWithLyricsStatus);
+    } catch (error) {
+      console.error("Error fetching artist songs:", error);
+      res.status(500).json({ message: "Failed to fetch artist songs" });
+    }
+  });
+
   // Manager routes
   app.get('/api/manager/artists', requireAuth, async (req: any, res) => {
     try {

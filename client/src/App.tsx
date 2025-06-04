@@ -19,6 +19,7 @@ import Discover from "@/pages/Discover";
 import ArtistAnalytics from "@/pages/ArtistAnalytics";
 import ArtistSignUp from "@/pages/ArtistSignUp";
 import ManagerSignUp from "@/pages/ManagerSignUp";
+import ArtistManagementDashboard from "@/pages/ArtistManagementDashboard";
 import Playlists from "@/pages/Playlists";
 import PlaylistDetail from "@/pages/PlaylistDetail";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -81,6 +82,7 @@ function Router() {
           <Route path="/listener" component={ListenerDashboard} />
           <Route path="/artist" component={ArtistDashboard} />
           <Route path="/manager" component={ManagerDashboard} />
+          <Route path="/artist-dashboard/:artistId" component={ArtistManagementDashboard} />
           <Route path="/manager/create-artist" component={CreateArtistProfile} />
           <Route path="/edit-artist/:id" component={EditArtistProfile} />
           <Route path="/upload" component={SongUpload} />
