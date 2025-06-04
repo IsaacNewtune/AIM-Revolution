@@ -78,6 +78,9 @@ export const songs = pgTable("songs", {
   fileUrl: varchar("file_url").notNull(),
   coverArtUrl: varchar("cover_art_url"),
   duration: integer("duration"), // in seconds
+  genre: varchar("genre").default("Electronic"),
+  mood: varchar("mood").default("Energetic"),
+  tags: text("tags").array(),
   aiGenerationMethod: varchar("ai_generation_method", { 
     enum: ["fully_ai", "ai_assisted", "ai_post_processing"] 
   }).notNull(),
@@ -126,6 +129,8 @@ export const streams = pgTable("streams", {
   songId: uuid("song_id").notNull().references(() => songs.id),
   isPaidUser: boolean("is_paid_user").default(false),
   location: varchar("location"),
+  revenue: decimal("revenue", { precision: 10, scale: 2 }).default("0"),
+  streamedAt: timestamp("streamed_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
