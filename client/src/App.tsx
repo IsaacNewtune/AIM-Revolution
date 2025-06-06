@@ -17,6 +17,8 @@ import ListenerDashboard from "@/pages/ListenerDashboard";
 import ArtistDashboard from "@/pages/ArtistDashboard";
 import ManagerDashboard from "@/pages/ManagerDashboard";
 import Discover from "@/pages/Discover";
+import AdvancedDiscovery from "@/pages/AdvancedDiscovery";
+import SocialHub from "@/pages/SocialHub";
 import ArtistAnalytics from "@/pages/ArtistAnalytics";
 import ArtistSignUp from "@/pages/ArtistSignUp";
 import ManagerSignUp from "@/pages/ManagerSignUp";
@@ -75,7 +77,8 @@ function Router() {
           <Route path="/payment-setup" component={PaymentSetup} />
           <Route path="/" component={Home} />
           <Route path="/profile-setup" component={ProfileSetup} />
-          <Route path="/discover" component={Discover} />
+          <Route path="/discover" component={AdvancedDiscovery} />
+          <Route path="/social" component={SocialHub} />
           <Route path="/analytics" component={ArtistAnalytics} />
           <Route path="/artist-analytics/:id" component={ArtistAnalytics} />
           <Route path="/playlists" component={Playlists} />
@@ -83,6 +86,8 @@ function Router() {
           <Route path="/listener" component={ListenerDashboard} />
           <Route path="/artist" component={ArtistDashboard} />
           <Route path="/manager" component={ManagerDashboard} />
+          <Route path="/manager/artists" component={ArtistManagementDashboard} />
+          <Route path="/manager/analytics" component={ArtistAnalytics} />
           <Route path="/artist-dashboard/:artistId" component={ArtistManagementDashboard} />
           <Route path="/manager/create-artist" component={CreateArtistProfile} />
           <Route path="/edit-artist/:id" component={EditArtistProfile} />

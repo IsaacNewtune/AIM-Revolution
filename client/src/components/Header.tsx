@@ -38,8 +38,10 @@ export default function Header({ userType }: HeaderProps) {
       case 'manager':
         return [
           { icon: BarChart3, label: 'Dashboard', href: '/manager' },
-          { icon: Users, label: 'My Artists', href: '/manager' },
-          { icon: BarChart3, label: 'Analytics', href: '/analytics' },
+          { icon: Users, label: 'My Artists', href: '/manager/artists' },
+          { icon: Search, label: 'Discover', href: '/discover' },
+          { icon: Music, label: 'Social Hub', href: '/social' },
+          { icon: BarChart3, label: 'Analytics', href: '/manager/analytics' },
           { icon: Plus, label: 'Add Artist', href: '/manager/create-artist' },
           { icon: Settings, label: 'Settings', href: '/settings' },
         ];
