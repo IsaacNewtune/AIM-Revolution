@@ -68,6 +68,10 @@ export interface IStorage {
   getRecommendedSongs(userId: string): Promise<Song[]>;
   updateSongStats(songId: string, streamCount: number, revenue: string): Promise<void>;
   
+  // Bitrate and streaming operations
+  getSongStreamingUrl(songId: string, userSubscriptionTier: string): Promise<{ url: string; bitrate: number; quality: string } | null>;
+  updateSongBitrateUrls(songId: string, bitrateUrls: { [bitrate: number]: string }): Promise<void>;
+  
   // Enhanced discovery
   discoverSongs(filters: { 
     query?: string; 
@@ -494,6 +498,57 @@ export class DatabaseStorage implements IStorage {
 
   async updateSongStats(songId: string, streamCount: number, revenue: string): Promise<void> {
     await db.update(songs).set({ streamCount, totalRevenue: revenue }).where(eq(songs.id, songId));
+  }
+
+  async getSongStreamingUrl(songId: string, userSubscriptionTier: string): Promise<{ url: string; bitrate: number; quality: string } | null> {
+    const [song] = await db.select().from(songs).where(eq(songs.id, songId));
+    
+    if (!song) return null;
+
+    // Define bitrate access based on subscription tier
+    const bitrateAccess = {
+      'free': 128,
+      'listener-free': 128,
+      'premium': 192,
+      'listener-premium': 192,
+      'vip': 320,
+      'listener-vip': 320,
+      'artist': 192,        // Artists get premium quality
+      'artist-plus': 320,   // Artist Plus gets highest quality
+      'manager': 320        // Managers get highest quality
+    };
+
+    const maxBitrate = bitrateAccess[userSubscriptionTier as keyof typeof bitrateAccess] || 128;
+    
+    // If song has bitrate URLs, select appropriate one
+    if (song.bitrateUrls && typeof song.bitrateUrls === 'object') {
+      const availableBitrates = Object.keys(song.bitrateUrls).map(Number).sort((a, b) => b - a);
+      
+      // Find highest available bitrate that user can access
+      const selectedBitrate = availableBitrates.find(bitrate => bitrate <= maxBitrate) || Math.min(...availableBitrates);
+      const streamingUrl = (song.bitrateUrls as any)[selectedBitrate];
+      
+      if (streamingUrl) {
+        return {
+          url: streamingUrl,
+          bitrate: selectedBitrate,
+          quality: selectedBitrate >= 320 ? 'vip' : selectedBitrate >= 192 ? 'premium' : 'free'
+        };
+      }
+    }
+
+    // Fallback to legacy fileUrl
+    return {
+      url: song.fileUrl,
+      bitrate: 128, // Assume legacy files are 128kbps
+      quality: 'free'
+    };
+  }
+
+  async updateSongBitrateUrls(songId: string, bitrateUrls: { [bitrate: number]: string }): Promise<void> {
+    await db.update(songs)
+      .set({ bitrateUrls })
+      .where(eq(songs.id, songId));
   }
 
   async discoverSongs(filters: { 

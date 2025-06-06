@@ -768,6 +768,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get streaming URL with bitrate based on subscription tier
+  app.get('/api/songs/:id/stream', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const songId = req.params.id;
+      
+      const user = await storage.getUser(userId);
+      const song = await storage.getSong(songId);
+      
+      if (!song) {
+        return res.status(404).json({ message: "Song not found" });
+      }
+
+      // Determine user's subscription tier for bitrate access
+      let userTier = 'free'; // Default to free tier
+      if (user?.subscriptionPlan) {
+        if (user.subscriptionPlan.includes('vip')) userTier = 'vip';
+        else if (user.subscriptionPlan.includes('premium')) userTier = 'premium';
+        else if (user.subscriptionPlan.includes('artist')) userTier = 'premium'; // Artists get premium bitrate
+      }
+
+      // Get appropriate streaming URL based on user tier
+      let streamingUrl = song.fileUrl; // Fallback to legacy URL
+      
+      if (song.bitrateUrls && cloudStorage.isAvailable()) {
+        streamingUrl = cloudStorage.getStreamingUrl(song.bitrateUrls as any, userTier);
+      }
+
+      // Record the stream
+      const isPaidUser = user?.subscriptionTier !== 'free';
+      await storage.recordStream(userId, songId, isPaidUser);
+
+      res.json({ 
+        streamingUrl,
+        bitrate: BITRATE_CONFIG[userTier as keyof typeof BITRATE_CONFIG] || 128,
+        quality: userTier
+      });
+    } catch (error) {
+      console.error("Error getting streaming URL:", error);
+      res.status(500).json({ message: "Failed to get streaming URL" });
+    }
+  });
+
   // Stream routes
   app.post('/api/streams', requireAuth, async (req: any, res) => {
     try {
