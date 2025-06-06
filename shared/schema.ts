@@ -41,7 +41,12 @@ export const users = pgTable("users", {
   creditBalance: decimal("credit_balance", { precision: 10, scale: 2 }).default("0"),
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
-  subscriptionTier: varchar("subscription_tier", { enum: ["free", "basic", "premium"] }).default("free"),
+  subscriptionTier: varchar("subscription_tier", { 
+    enum: ["free", "premium", "vip", "artist", "artist-plus", "manager"] 
+  }).default("free"),
+  subscriptionPlan: varchar("subscription_plan", {
+    enum: ["listener-free", "listener-premium", "listener-vip", "artist", "artist-plus", "manager"]
+  }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -75,7 +80,9 @@ export const songs = pgTable("songs", {
   artistId: integer("artist_id").notNull().references(() => artists.id),
   title: varchar("title").notNull(),
   description: text("description"),
-  fileUrl: varchar("file_url").notNull(),
+  fileUrl: varchar("file_url").notNull(), // Legacy field for backwards compatibility
+  // Multi-bitrate URLs stored as JSON: {128: "url", 192: "url", 320: "url"}
+  bitrateUrls: jsonb("bitrate_urls"),
   coverArtUrl: varchar("cover_art_url"),
   duration: integer("duration"), // in seconds
   genre: varchar("genre").default("Electronic"),
@@ -87,6 +94,10 @@ export const songs = pgTable("songs", {
   streamCount: integer("stream_count").default(0),
   revenue: decimal("revenue", { precision: 10, scale: 2 }).default("0"),
   isPublished: boolean("is_published").default(false),
+  // Storage metadata
+  s3Key: varchar("s3_key"), // S3 object key for CloudFront
+  fileSize: integer("file_size"), // File size in bytes
+  audioFormat: varchar("audio_format").default("mp3"), // mp3, wav, flac, etc.
   createdAt: timestamp("created_at").defaultNow(),
 });
 

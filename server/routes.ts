@@ -5,9 +5,11 @@ import multer from "multer";
 import path from "path";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
+import { cloudStorage, uploadConfig, BITRATE_CONFIG } from "./cloudStorage";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool, db } from "./db";
+import { v4 as uuidv4 } from 'uuid';
 import { 
   insertSongSchema, 
   insertTipSchema, 
